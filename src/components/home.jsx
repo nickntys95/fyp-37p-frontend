@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import AppAppBar from "./appbar";
-import AppTheme from "../shared-theme/AppTheme";
-import Box from "@mui/material/Box";
-import CssBaseline from "@mui/material/CssBaseline";
+import AppAppBar from './appbar';
+import AppTheme from '../shared-theme/AppTheme';
+import Box from '@mui/material/Box';
+import CssBaseline from '@mui/material/CssBaseline';
 import SearchBar from "./SearchBar";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert from "@mui/material/Alert";
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
 function Home() {
   const [modalShow, setModalShow] = useState(false);
@@ -16,7 +16,7 @@ function Home() {
   const [results, setResults] = useState([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   // Chatbot States
-  const user_name = sessionStorage.getItem("user_name"); // Retrieve recovery key from sessionStorage
+  const user_name = sessionStorage.getItem('user_name');  // Retrieve recovery key from sessionStorage
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [username] = useState(user_name); //need replace to user_name in future
   const [messages, setMessages] = useState([]);
@@ -24,8 +24,8 @@ function Home() {
   const messagesEndRef = useRef(null);
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error'
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error'
   const token = sessionStorage.getItem("token") || "";
   const [selectedListing, setSelectedListing] = useState(null);
   const [listings, setListings] = useState([]);
@@ -39,7 +39,8 @@ function Home() {
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
-  };
+};
+
 
   const handleCloseModal = () => {
     setModalShow(false);
@@ -58,26 +59,21 @@ function Home() {
 
   // Start Chat (Bot Welcome Message)
   const handleStartChat = async () => {
-    console.log("token:", token);
+	console.log("token:", token)
     toggleChat();
     try {
-      const response = await fetch(
-        "https://asterheng-github-io.onrender.com/start_chat/",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, message: "start chat", token }),
-        }
-      );
+      const response = await fetch('/api1/start_chat/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, message: "start chat", token }),
+      });
 
       const data = await response.json();
-      console.log("chat data ", data);
-      setMessages([{ sender: "bot", text: data.message }]); // Store bot's response
+	  console.log("chat data ", data)
+      setMessages([{ sender: 'bot', text: data.message }]); // Store bot's response
     } catch (error) {
-      console.error("Error starting chat:", error);
-      setMessages([
-        { sender: "bot", text: "Failed to start chat, please try again." },
-      ]);
+      console.error('Error starting chat:', error);
+      setMessages([{ sender: 'bot', text: 'Failed to start chat, please try again.' }]);
     }
   };
 
@@ -89,30 +85,25 @@ function Home() {
     setMessages([...messages, { sender: "user", text: userInput }]);
 
     try {
-      const response = await fetch(
-        "https://asterheng-github-io.onrender.com/question_chat/",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, message: userInput, token }),
-        }
-      );
+      const response = await fetch('/api1/question_chat/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, message: userInput, token }),
+      });
 
       const data = await response.json();
-      setMessages((prev) => [...prev, { sender: "bot", text: data.message }]);
+      setMessages(prev => [...prev, { sender: "bot", text: data.message }]);
       setUserInput(""); // Clear input after sending
     } catch (error) {
-      console.error("Error sending message:", error);
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", text: "Failed to send message, please try again." },
-      ]);
+      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, { sender: "bot", text: 'Failed to send message, please try again.' }]);
     }
   };
 
   function cleanDateString(dateString) {
-    return dateString.replace("T", " | ").replace("+00:00", "");
-  }
+    return dateString.replace('T', ' | ').replace('+00:00', '');
+}
+
 
   // Fetch Listings and Bids in Parallel
   const [cachedListings, setCachedListings] = useState([]); // Store last fetched listings
@@ -120,16 +111,13 @@ function Home() {
   const fetchListingsAndBids = async () => {
     try {
       console.log(" Fetching data...");
-      const response = await fetch(
-        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/listing/get_all",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch('/api2/listing/get_all', {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -163,6 +151,7 @@ function Home() {
       } else {
         console.log("No new listings. Skipping state update.");
       }
+
     } catch (err) {
       console.error(" Error fetching listings:", err);
       setError("An error occurred while fetching listings");
@@ -174,17 +163,14 @@ function Home() {
     try {
       console.log(" Fetching updated bids...");
       const bidRequests = listings.map(async (listing) => {
-        const bidResponse = await fetch(
-          "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ listing_id: listing.id }),
-          }
-        );
+        const bidResponse = await fetch("/api2/bid/get_all", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ listing_id: listing.id }),
+        });
 
         if (!bidResponse.ok) return { id: listing.id, bid: 0 };
 
@@ -197,13 +183,11 @@ function Home() {
       });
 
       const bids = await Promise.all(bidRequests);
-      const bidMap = bids.reduce(
-        (acc, { id, bid }) => ({ ...acc, [id]: bid }),
-        {}
-      );
+      const bidMap = bids.reduce((acc, { id, bid }) => ({ ...acc, [id]: bid }), {});
 
       console.log("📊 Updated Bid Map:", bidMap);
       setCurrentBids((prevBids) => ({ ...prevBids, ...bidMap })); // Merge new bids
+
     } catch (err) {
       console.error(" Error fetching bids:", err);
     }
@@ -225,10 +209,15 @@ function Home() {
       }
     };
 
+
     fetchData(); // Initial fetch (no timeout here)
 
     return () => clearTimeout(timeoutId); // Clear timeout on unmount
   }, []);
+
+
+
+
 
   return (
     <>
@@ -241,44 +230,28 @@ function Home() {
 
             {/* Search Bar */}
             <div className="search-bar-container">
-              <SearchBar
-                setResults={setResults}
-                setError={(err) => setError(err)}
-              />
+              <SearchBar setResults={setResults} setError={(err) => setError(err)} />
             </div>
 
             {error ? (
               <div className="error-container">
                 <p className="error-title">{error.title}</p>
-                {error.message && (
-                  <p className="error-message">{error.message}</p>
-                )}
+                {error.message && <p className="error-message">{error.message}</p>}
                 <ul className="error-suggestions">
-                  {error.suggestions &&
-                    error.suggestions.map((suggestion, index) => (
-                      <li key={index}>{suggestion}</li>
-                    ))}
+                  {error.suggestions && error.suggestions.map((suggestion, index) => (
+                    <li key={index}>{suggestion}</li>
+                  ))}
                 </ul>
               </div>
             ) : (
               <div className="row gx-4 gy-4 align-items-stretch">
                 <div className="row gx-4 gy-4">
-                  {(results.length > 0 || results === null
-                    ? results
-                    : listings
-                  ).map((listing) => (
-                    <div
-                      key={listing.id}
-                      className="col-lg-4 col-md-6 d-flex align-items-stretch"
-                    >
+                  {(results.length > 0 || results === null ? results : listings).map((listing) => (
+                    <div key={listing.id} className="col-lg-4 col-md-6 d-flex align-items-stretch">
                       <div className="card h-100 w-100 shadow d-flex flex-column">
                         <Box
                           component="img"
-                          src={
-                            listing.image_urls?.length > 0
-                              ? listing.image_urls[0]
-                              : "/placeholder.jpg"
-                          }
+                          src={listing.image_urls?.length > 0 ? listing.image_urls[0] : "/placeholder.jpg"}
                           alt={listing.title}
                           sx={{
                             width: "100%",
@@ -289,11 +262,9 @@ function Home() {
                           }}
                         />
                         <div className="card-body text-center d-flex flex-column justify-content-between">
+
                           {/* Title Section */}
-                          <h5
-                            className="card-title"
-                            style={{ minHeight: "50px", fontSize: "1.2rem" }}
-                          >
+                          <h5 className="card-title" style={{ minHeight: "50px", fontSize: "1.2rem" }}>
                             {listing.title}
                           </h5>
 
@@ -307,39 +278,21 @@ function Home() {
                               textOverflow: "ellipsis",
                               display: "-webkit-box",
                               WebkitLineClamp: 3,
-                              WebkitBoxOrient: "vertical",
+                              WebkitBoxOrient: "vertical"
                             }}
                           >
                             <strong>Description:</strong> {listing.description}
                           </p>
 
                           {/* Other Details */}
-                          <p className="card-text mb-2">
-                            <strong>Starting Price:</strong> $
-                            {listing.minimum_bid}
-                          </p>
-                          <p className="card-text mb-2">
-                            <strong>Current Bid:</strong> $
-                            {currentBids[listing.id] ?? "Loading..."}
-                          </p>
-                          <p className="card-text mb-2">
-                            <strong>Buy-Now Price:</strong> ${listing.buy_now}
-                          </p>
-                          <p className="card-text mb-2">
-                            <strong>Auction Type:</strong>{" "}
-                            {listing.auction_strategy}
-                          </p>
+                          <p className="card-text mb-2"><strong>Starting Price:</strong> ${listing.minimum_bid}</p>
+                          <p className="card-text mb-2"><strong>Current Bid:</strong> ${currentBids[listing.id] ?? "Loading..."}</p>
+                          <p className="card-text mb-2"><strong>Buy-Now Price:</strong> ${listing.buy_now}</p>
+                          <p className="card-text mb-2"><strong>Auction Type:</strong> {listing.auction_strategy}</p>
 
                           {/* View Details Button */}
                           <div className="mt-auto">
-                            <button
-                              className="btn btn-primary"
-                              onClick={() => handleShowDetails(listing)}
-                              style={{ borderRadius: "30px", width: "100%" }}
-                            >
-                              {" "}
-                              View Details{" "}
-                            </button>
+                            <button className="btn btn-primary" onClick={() => handleShowDetails(listing)} style={{ borderRadius: "30px", width: "100%" }} > View Details </button>
                           </div>
                         </div>
                       </div>
@@ -385,9 +338,7 @@ function Home() {
                       <button
                         onClick={() =>
                           setSelectedImageIndex((prev) =>
-                            prev === 0
-                              ? selectedListing.image_urls.length - 1
-                              : prev - 1
+                            prev === 0 ? selectedListing.image_urls.length - 1 : prev - 1
                           )
                         }
                         style={{
@@ -410,12 +361,8 @@ function Home() {
                           height: "50px",
                           backdropFilter: "blur(5px)", // Adds blur effect
                         }}
-                        onMouseOver={(e) =>
-                          (e.target.style.background = "rgba(0, 0, 0, 0.6)")
-                        }
-                        onMouseOut={(e) =>
-                          (e.target.style.background = "rgba(0, 0, 0, 0.3)")
-                        }
+                        onMouseOver={(e) => (e.target.style.background = "rgba(0, 0, 0, 0.6)")}
+                        onMouseOut={(e) => (e.target.style.background = "rgba(0, 0, 0, 0.3)")}
                       >
                         {"❮"}
                       </button>
@@ -424,9 +371,7 @@ function Home() {
                       <button
                         onClick={() =>
                           setSelectedImageIndex((prev) =>
-                            prev === selectedListing.image_urls.length - 1
-                              ? 0
-                              : prev + 1
+                            prev === selectedListing.image_urls.length - 1 ? 0 : prev + 1
                           )
                         }
                         style={{
@@ -449,12 +394,8 @@ function Home() {
                           height: "50px",
                           backdropFilter: "blur(5px)", // Adds blur effect
                         }}
-                        onMouseOver={(e) =>
-                          (e.target.style.background = "rgba(0, 0, 0, 0.6)")
-                        }
-                        onMouseOut={(e) =>
-                          (e.target.style.background = "rgba(0, 0, 0, 0.3)")
-                        }
+                        onMouseOver={(e) => (e.target.style.background = "rgba(0, 0, 0, 0.6)")}
+                        onMouseOut={(e) => (e.target.style.background = "rgba(0, 0, 0, 0.3)")}
                       >
                         {"❯"}
                       </button>
@@ -465,8 +406,7 @@ function Home() {
                   <Box
                     component="img"
                     src={
-                      selectedListing.image_urls?.[selectedImageIndex] ||
-                      "/placeholder.jpg"
+                      selectedListing.image_urls?.[selectedImageIndex] || "/placeholder.jpg"
                     }
                     alt={selectedListing.title || "Listing Image"}
                     sx={{
@@ -483,37 +423,17 @@ function Home() {
                   <p style={{ textAlign: "justify" }}>
                     <strong>Description:</strong> {selectedListing.description}
                   </p>
-                  <p>
-                    <strong>Start Date:</strong>{" "}
-                    {cleanDateString(selectedListing.start_at)}
-                  </p>
-                  <p>
-                    <strong>End Date:</strong>{" "}
-                    {cleanDateString(selectedListing.end_at)}
-                  </p>
-                  <p>
-                    <strong>Starting Price:</strong> $
-                    {selectedListing.minimum_bid}
-                  </p>
-                  <p>
-                    <strong>Current Bid:</strong>{" "}
-                    {currentBids[selectedListing?.id] ?? "Loading..."}
-                  </p>
-                  <p>
-                    <strong>Buy-Now Price:</strong> ${selectedListing.buy_now}
-                  </p>
-                  <p>
-                    <strong>Auction Type:</strong>{" "}
-                    {selectedListing.auction_strategy}
-                  </p>
+                  <p><strong>Start Date:</strong> {cleanDateString(selectedListing.start_at)}</p>
+                  <p><strong>End Date:</strong> {cleanDateString(selectedListing.end_at)}</p>
+                  <p><strong>Starting Price:</strong> ${selectedListing.minimum_bid}</p>
+                  <p><strong>Current Bid:</strong> {currentBids[selectedListing?.id] ?? "Loading..."}</p>
+                  <p><strong>Buy-Now Price:</strong> ${selectedListing.buy_now}</p>
+                  <p><strong>Auction Type:</strong> {selectedListing.auction_strategy}</p>
 
                   {/* Buttons Section - Ensuring Single Row Alignment */}
                   <div className="d-flex justify-content-between mt-3 gap-2">
                     {/* Close Button */}
-                    <button
-                      className="btn btn-danger flex-grow-1"
-                      onClick={handleCloseModal}
-                    >
+                    <button className="btn btn-danger flex-grow-1" onClick={handleCloseModal}>
                       Close
                     </button>
 
@@ -526,7 +446,7 @@ function Home() {
                         description: selectedListing.description,
                         auction_strategy: selectedListing.auction_strategy,
                         minimum_bid: selectedListing.minimum_bid,
-                        minimum_increment: selectedListing.minimum_increment,
+		        minimum_increment: selectedListing.minimum_increment,
                         buy_now: selectedListing.buy_now,
                         start_at: selectedListing.start_at,
                         end_at: selectedListing.end_at,
@@ -540,25 +460,25 @@ function Home() {
 
                     {/* Buy Now Button */}
                     <button
-                      className="btn btn-warning flex-grow-1"
-                      onClick={() =>
-                        navigate("/checkout", {
-                          state: {
-                            id: selectedListing.id,
-                            title: selectedListing.title,
-                            description: selectedListing.description,
-                            auction_strategy: selectedListing.auction_strategy,
-                            minimum_bid: selectedListing.minimum_bid,
-                            buy_now: selectedListing.buy_now,
-                            image_urls: selectedListing.image_urls,
-                            start_at: selectedListing.start_at,
-                            end_at: selectedListing.end_at,
-                          },
-                        })
-                      }
-                    >
-                      Buy Now
-                    </button>
+                        className="btn btn-warning flex-grow-1"
+                        onClick={() =>
+                          navigate("/checkout", {
+                            state: {
+                              id: selectedListing.id,
+                              title: selectedListing.title,
+                              description: selectedListing.description,
+                              auction_strategy: selectedListing.auction_strategy,
+                              minimum_bid: selectedListing.minimum_bid,
+                              buy_now: selectedListing.buy_now,
+                              image_urls: selectedListing.image_urls,
+                              start_at: selectedListing.start_at,
+                              end_at: selectedListing.end_at
+                            },
+                          })
+                        }
+                      >
+                        Buy Now
+                      </button>
 
                     {/* Add to Wishlist Button */}
                     <button
@@ -567,38 +487,29 @@ function Home() {
                         const token = sessionStorage.getItem("token"); // Retrieve JWT token
 
                         if (!token) {
-                          setSnackbarMessage(
-                            "You must be logged in to add favorites."
-                          );
-                          setSnackbarSeverity("error");
+                          setSnackbarMessage('You must be logged in to add favorites.');
+                          setSnackbarSeverity('error');
                           setOpenSnackbar(true);
                           //alert("You must be logged in to add favorites.");
                           return;
                         }
 
                         try {
-                          const response = await fetch(
-                            "https://fyp-37p-api-a16b479cb42b.herokuapp.com/favorite/add",
-                            {
-                              method: "POST",
-                              headers: {
-                                "Content-Type": "application/json",
-                                Authorization: `Bearer ${token}`,
-                              },
-                              body: JSON.stringify({
-                                listing_id: selectedListing.id,
-                              }),
-                            }
-                          );
+                          const response = await fetch("/api2/favorite/add", {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ listing_id: selectedListing.id }),
+                          });
 
                           const data = await response.json();
 
                           if (data.successful) {
                             //alert("Item added to favorites!");
-                            setSnackbarMessage(
-                              "Item added to favorites! Redirecting..."
-                            );
-                            setSnackbarSeverity("success");
+                            setSnackbarMessage('Item added to favorites! Redirecting...');
+                            setSnackbarSeverity('success');
                             setOpenSnackbar(true);
 
                             // Redirect user to Wishlist page after a short delay
@@ -611,10 +522,8 @@ function Home() {
                         } catch (error) {
                           console.error("Error adding to favorites:", error);
                           //alert("Failed to add item to favorites. Please try again.");
-                          setSnackbarMessage(
-                            "Failed to add item to favorites. Please try again."
-                          );
-                          setSnackbarSeverity("error");
+                          setSnackbarMessage('Failed to add item to favorites. Please try again.');
+                          setSnackbarSeverity('error');
                           setOpenSnackbar(true);
                         }
                       }}
@@ -625,16 +534,10 @@ function Home() {
                 </div>
               </div>
             )}
+
           </div>
           {/* Chatbot Button */}
-          <div
-            style={{
-              position: "fixed",
-              bottom: "20px",
-              right: "20px",
-              zIndex: 1000,
-            }}
-          >
+          <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 1000 }}>
             <button
               onClick={handleStartChat}
               style={{
@@ -672,16 +575,14 @@ function Home() {
               }}
             >
               {/* Header */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "10px",
-                  padding: "10px",
-                  borderBottom: "1px solid #ddd",
-                }}
-              >
+              <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "10px",
+                padding: "10px",
+                borderBottom: "1px solid #ddd"
+              }}>
                 <h4 style={{ margin: 0, color: "#000" }}>Bot Assistant</h4>
                 <button
                   onClick={toggleChat}
@@ -697,17 +598,16 @@ function Home() {
               </div>
 
               {/* Messages Section */}
-              <div
-                style={{
-                  flex: 1,
-                  overflowY: "auto",
-                  marginBottom: "10px",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "5px",
-                  backgroundColor: "#f9f9f9",
-                }}
-                ref={messagesEndRef} // Attaching the ref here
+              <div style={{
+                flex: 1,
+                overflowY: "auto",
+                marginBottom: "10px",
+                padding: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "5px",
+                backgroundColor: "#f9f9f9",
+              }}
+                ref={messagesEndRef}  // Attaching the ref here
               >
                 {messages.map((message, index) => (
                   <div
@@ -717,8 +617,7 @@ function Home() {
                       margin: "5px 0",
                       padding: "8px",
                       borderRadius: "5px",
-                      backgroundColor:
-                        message.sender === "user" ? "#007bff" : "#e9ecef",
+                      backgroundColor: message.sender === "user" ? "#007bff" : "#e9ecef",
                       color: message.sender === "user" ? "#fff" : "#000",
                       maxWidth: "80%",
                       fontSize: "1.3rem",
@@ -776,14 +675,14 @@ function Home() {
           )}
           <Snackbar
             open={openSnackbar}
-            autoHideDuration={4000} // Duration in ms before Snackbar auto closes
+            autoHideDuration={4000}  // Duration in ms before Snackbar auto closes
             onClose={handleCloseSnackbar}
-            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
           >
             <MuiAlert
               onClose={handleCloseSnackbar}
               severity={snackbarSeverity}
-              sx={{ width: "100%", fontSize: "1.50rem" }}
+              sx={{ width: '100%', fontSize: '1.50rem' }}
             >
               {snackbarMessage}
             </MuiAlert>

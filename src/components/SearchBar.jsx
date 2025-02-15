@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import SearchIcon from "@mui/icons-material/Search";
+import React, { useState } from 'react';
+import SearchIcon from '@mui/icons-material/Search';
 
 const SearchBar = ({ setResults, setError, categories = [] }) => {
   const [input, setInput] = useState("");
@@ -18,67 +18,55 @@ const SearchBar = ({ setResults, setError, categories = [] }) => {
     setError(null);
 
     try {
-      const response = await fetch(
-        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/listing/search",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            q: value,
-            category: category,
-          },
-        }
-      );
+      const response = await fetch('/api2/listing/search', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          q: value,
+          category: category
+        },
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       const categoryMap = {
-        auction_strategy: "auction_strategy",
-        item_type: "item_type",
-        title: "title",
-        description: "description",
-        minimum_bid: "minimum_bid",
-        auction_duration: "auction_duration",
-        buy_now: "buy_now",
+        auction_strategy: 'auction_strategy',
+        item_type: 'item_type',
+        title: 'title',
+        description: 'description',
+        minimum_bid: 'minimum_bid',
+        auction_duration: 'auction_duration',
+        buy_now: 'buy_now',
       };
 
       const filteredResults = data.results.filter((result) => {
         if (category in categoryMap) {
           const fieldValue = result[categoryMap[category]];
-          if (category === "auction_duration") {
+          if (category === 'auction_duration') {
             const startDate = new Date(result.start_at);
             const endDate = new Date(result.end_at);
-            const durationInMilliseconds =
-              endDate.getTime() - startDate.getTime();
-            const durationInDays = Math.floor(
-              durationInMilliseconds / (1000 * 60 * 60 * 24)
-            );
+            const durationInMilliseconds = endDate.getTime() - startDate.getTime();
+            const durationInDays = Math.floor(durationInMilliseconds / (1000 * 60 * 60 * 24));
             return durationInDays === Number(value);
-          } else if (typeof fieldValue === "number") {
+          } else if (typeof fieldValue === 'number') {
             return fieldValue === Number(value);
           } else {
-            return (
-              fieldValue.toLowerCase() === value.toLowerCase() ||
-              fieldValue.toLowerCase() === value ||
-              fieldValue.toLowerCase().includes(value.toLowerCase())
-            );
+            return fieldValue.toLowerCase() === value.toLowerCase()
+              || fieldValue.toLowerCase() === value
+              || fieldValue.toLowerCase().includes(value.toLowerCase());
           }
         } else {
           const values = Object.values(result);
           return values.some((value) => {
-            return (
-              String(value).toLowerCase() === input.toLowerCase() ||
-              String(value).toLowerCase().includes(input.toLowerCase())
-            );
+            return String(value).toLowerCase() === input.toLowerCase()
+              || String(value).toLowerCase().includes(input.toLowerCase());
           });
         }
       });
@@ -131,36 +119,18 @@ const SearchBar = ({ setResults, setError, categories = [] }) => {
       <form className="input-search" onSubmit={handleSubmit}>
         <SearchIcon id="search-icon" />
         <input
-          type={
-            selectedCategory === "minimum_bid" ||
-            selectedCategory === "buy_now" ||
-            selectedCategory === "auction_duration"
-              ? "number"
-              : "text"
-          }
-          step={
-            selectedCategory === "minimum_bid" ||
-            selectedCategory === "buy_now" ||
-            selectedCategory === "auction_duration"
-              ? "1"
-              : undefined
-          }
-          min={
-            selectedCategory === "minimum_bid" ||
-            selectedCategory === "buy_now" ||
-            selectedCategory === "auction_duration"
-              ? "0"
-              : undefined
-          }
+          type={selectedCategory === 'minimum_bid' || selectedCategory === 'buy_now' ||
+            selectedCategory === 'auction_duration' ? 'number' : 'text'}
+          step={selectedCategory === 'minimum_bid' || selectedCategory === 'buy_now'
+            || selectedCategory === 'auction_duration' ? '1' : undefined}
+          min={selectedCategory === 'minimum_bid' || selectedCategory === 'buy_now'
+            || selectedCategory === 'auction_duration' ? '0' : undefined}
           className="input-text"
           placeholder={
-            selectedCategory === "minimum_bid"
-              ? "Enter Starting Price"
-              : selectedCategory === "buy_now"
-              ? "Enter Buy-Now Price"
-              : selectedCategory === "auction_duration"
-              ? "Enter the No. of days"
-              : "Type to Search..."
+            selectedCategory === 'minimum_bid' ? 'Enter Starting Price' :
+              selectedCategory === 'buy_now' ? 'Enter Buy-Now Price' :
+                selectedCategory === 'auction_duration' ? 'Enter the No. of days' :
+                  'Type to Search...'
           }
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -170,26 +140,16 @@ const SearchBar = ({ setResults, setError, categories = [] }) => {
           <option value="title">Title/Name</option>
           <option value="item_type">Item Type</option>
           <option value="description">Description</option>
-          <option type="number" value="minimum_bid">
-            Starting Price
-          </option>
+          <option type="number" value="minimum_bid">Starting Price</option>
           <option value="auction_strategy">Auction Strategy</option>
-          <option type="number" value="auction_duration">
-            Auction Duration
-          </option>
-          <option type="number" value="buy_now">
-            Buy-Now Price
-          </option>
+          <option type="number" value="auction_duration">Auction Duration</option>
+          <option type="number" value="buy_now">Buy-Now Price</option>
 
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
+          {categories.map(category => (
+            <option key={category} value={category}>{category}</option>
           ))}
         </select>
-        <button type="submit" style={{ display: "none" }}>
-          Search
-        </button>
+        <button type="submit" style={{ display: 'none' }}>Search</button>
       </form>
       {isLoading && <div style={{ fontSize: 12 }}>Loading result...</div>}
     </div>

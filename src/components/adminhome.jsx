@@ -127,7 +127,7 @@ function AdminHome() {
   
 	const handleDeleteListing = async (listing) => {
 	  try {
-		const response = await fetch(`https://fyp-37p-api-a16b479cb42b.herokuapp.com/listing/admin_redact/${listing.id}`, {
+		const response = await fetch(`/api2/listing/admin_redact/${listing.id}`, {
 		  method: "PUT",
 		  headers: {
 			"Authorization": `Bearer ${token}`,

@@ -5,13 +5,14 @@ import AppAppBar from "./appbar";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
-import { useParams } from "react-router-dom";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert from "@mui/material/Alert";
+import { useParams } from 'react-router-dom';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
 function SellerMonitorBids() {
   const navigate = useNavigate();
   const { itemId } = useParams();
+
 
   const location = useLocation();
   const chartRef = useRef(null);
@@ -19,7 +20,7 @@ function SellerMonitorBids() {
   const ws = useRef(null); // WebSocket ref
   const { state } = location;
   const initialBid = parseFloat(state?.bidAmount) || 0;
-
+ 
   const [currentBid, setCurrentBid] = useState(0);
   const [newBidAmount, setNewBidAmount] = useState(""); // State for new bid amount
   const [bids, setBids] = useState([]);
@@ -33,67 +34,63 @@ function SellerMonitorBids() {
   const [timeLeft, setTimeLeft] = useState();
   const [isExpired, setIsExpired] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error'
-  const [currentDateTime, setCurrentDateTime] = useState("");
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error'
+  const [currentDateTime, setCurrentDateTime] = useState('');
   const [listings, setListings] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const token = sessionStorage.getItem("token"); // or localStorage.getItem('token');
-  const listingId = itemId;
+  const listingId = itemId
   //const listing = location.state?.listing || JSON.parse(sessionStorage.getItem("listing"));
+
 
   useEffect(() => {
     const now = new Date();
     setCurrentDateTime(now.toISOString().slice(0, 16));
 
     const fetchListings = async () => {
-      try {
-        const response = await fetch(
-          "https://fyp-37p-api-a16b479cb42b.herokuapp.com/listing/get_all",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        try {
+            const response = await fetch('/api2/listing/get_all', {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          setError(errorData.error || "Failed to fetch listings");
-          return;
+            if (!response.ok) {
+                const errorData = await response.json();
+                setError(errorData.error || "Failed to fetch listings");
+                return;
+            }
+
+            const data = await response.json();
+            setListings(data);
+            setError(null);
+
+            const foundItem = data.find((item) => item.id === parseInt(itemId));
+            setSelectedItem(foundItem);
+            console.log("Selected Item:", foundItem);
+            
+        } catch (err) {
+            setError("An error occurred while fetching listings");
         }
-
-        const data = await response.json();
-        setListings(data);
-        setError(null);
-
-        const foundItem = data.find((item) => item.id === parseInt(itemId));
-        setSelectedItem(foundItem);
-        console.log("Selected Item:", foundItem);
-      } catch (err) {
-        setError("An error occurred while fetching listings");
-      }
     };
 
     fetchListings();
-  }, [itemId]);
+}, [itemId]);
 
   // Function to fetch initial bids using the REST API
   const fetchInitialBids = async () => {
     try {
-      const response = await fetch(
-        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ listing_id: listingId }),
-        }
-      );
+      const response = await fetch("/api2/bid/get_all", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ listing_id: listingId }),
+      });
 
       const data = await response.json();
 
@@ -117,12 +114,14 @@ function SellerMonitorBids() {
     }
   };
 
+  
+
   useEffect(() => {
     if (!endAt) return;
 
     const calculateTimeLeft = () => {
       const now = new Date();
-      now.setHours(now.getHours() + 8);
+      now.setHours(now.getHours() + 8)
       const difference = new Date(endAt) - now;
 
       if (difference <= 0) {
@@ -218,6 +217,9 @@ function SellerMonitorBids() {
       );
     };
 
+
+
+
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
       console.log("Received data: ", data); // Pretty log of the incoming data
@@ -240,9 +242,11 @@ function SellerMonitorBids() {
     };
   }, [token, isSubscribed, listingId]);
 
+
+
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
-  };
+};
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -333,11 +337,7 @@ function SellerMonitorBids() {
           <div style={{ textAlign: "center" }}>
             <Box
               component="img"
-              src={
-                selectedItem?.image_urls?.length > 0
-                  ? selectedItem.image_urls[0]
-                  : "/placeholder.jpg"
-              }
+              src={selectedItem?.image_urls?.length > 0 ? selectedItem.image_urls[0] : "/placeholder.jpg"}
               alt={selectedItem?.title || "Listing Image"}
               sx={{
                 width: "200px",
@@ -348,12 +348,8 @@ function SellerMonitorBids() {
                 border: "2px solid grey",
               }}
             />
-            <h4 className="mt-3">{selectedItem?.title || "Loading..."}</h4>{" "}
-            {/* Replace 'product.name' with 'listing.title' */}
-            <p className="text-muted">
-              {selectedItem?.description || "No description available"}
-            </p>{" "}
-            {/* Replace 'product.description' with 'listing.description' */}
+            <h4 className="mt-3">{selectedItem?.title || "Loading..."}</h4> {/* Replace 'product.name' with 'listing.title' */}
+            <p className="text-muted">{selectedItem?.description || "No description available"}</p> {/* Replace 'product.description' with 'listing.description' */}
           </div>
           {/* Chart Section */}
           <div
@@ -408,6 +404,7 @@ function SellerMonitorBids() {
                 )}
               </h4>
             </div>
+                
           </div>
         </div>
 
