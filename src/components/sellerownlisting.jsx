@@ -235,17 +235,20 @@ function Section({ title, list, type, navigate, setListings, listings }) {
     try {
       // Step 1: Delete all images
       for (const imageUrl of imageUrls) {
-        const deleteImageResponse = await fetch("api2/listing/delete_image", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            listing_id: listingId,
-            image_url: imageUrl,
-          }),
-        });
+        const deleteImageResponse = await fetch(
+          "https://fyp-37p-api-a16b479cb42b.herokuapp.com/listing/delete_image",
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              listing_id: listingId,
+              image_url: imageUrl,
+            }),
+          }
+        );
 
         const deleteImageData = await deleteImageResponse.json();
         console.log("Delete Image Response:", deleteImageData);

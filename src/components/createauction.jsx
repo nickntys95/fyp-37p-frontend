@@ -208,11 +208,14 @@ export default function CreateAuction() {
       formDataToUpload.append("image", file); // Ensure this is a File object
 
       try {
-        const response = await fetch("api2/listing/upload_image", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` }, // No 'Content-Type' for FormData
-          body: formDataToUpload,
-        });
+        const response = await fetch(
+          "https://fyp-37p-api-a16b479cb42b.herokuapp.com/listing/upload_image",
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` }, // No 'Content-Type' for FormData
+            body: formDataToUpload,
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`Failed to upload image. Status: ${response.status}`);
