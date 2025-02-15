@@ -262,7 +262,7 @@ function UsersManagement() {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      style={{ width: "100%", fontSize: "16px" }}
+                      style={{ width: "100%", fontSize: "16px", color: "#000" }}
                     />
                   </div>
                   <div style={{ marginBottom: "20px" }}>
@@ -282,7 +282,7 @@ function UsersManagement() {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      style={{ width: "100%", fontSize: "16px" }}
+                      style={{ width: "100%", fontSize: "16px", color: "#000" }}
                     />
                   </div>
                   <button
