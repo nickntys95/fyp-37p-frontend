@@ -39,8 +39,6 @@ function BiddingPage() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error'
   const token = sessionStorage.getItem("token"); // or localStorage.getItem('token');
   const listingId = listing?.id;
-  const [isProcessing, setIsProcessing] = useState(false);
-
   // Function to fetch initial bids using the REST API
   const fetchInitialBids = async () => {
     try {
@@ -198,11 +196,10 @@ function BiddingPage() {
       }
     };
   }, [token, isSubscribed, listingId]);
-  // ✅ Handle Bid Submission & Redirect to PayPal
+
   const handleSubmitBid = async (e) => {
     e.preventDefault();
-    setNewBidAmount("");
-
+    setNewBidAmount(""); // Reset input field
     try {
       const response = await fetch(
         "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make",
@@ -221,60 +218,30 @@ function BiddingPage() {
 
       const data = await response.json();
       if (data.successful) {
-        alert("Bid placed successfully!");
-        handlePaymentRedirect(newBidAmount); // ✅ Redirect to PayPal for payment
-      } else {
-        alert(data.error);
-        setError(data.error || "Failed to place bid.");
-      }
-    } catch (error) {
-      alert("Something went wrong!");
-      setError("Failed to send bid. Please try again.");
-    }
-  };
-
-  // ✅ Initialize Payment & Redirect to PayPal
-  const handlePaymentRedirect = async (bidAmount) => {
-    setIsProcessing(true);
-
-    try {
-      const requestBody = {
-        amount: bidAmount.toString(),
-        listing_id: listingId,
-      };
-
-      const response = await fetch(
-        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/init_payment",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+        // If the bid is successful, update the state
+        //alert("Bid placed successfully!");
+        setSnackbarMessage("Bid placed successfully!");
+        setSnackbarSeverity("success");
+        setOpenSnackbar(true);
+        navigate("/bidding-page", {
+          state: {
+            listing,
+            bidAmount: newBidAmount,
           },
-          body: JSON.stringify(requestBody),
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.successful && data.order && Array.isArray(data.order.links)) {
-        const approvalLink = data.order.links.find(
-          (link) => link.rel === "payer-action"
-        );
-
-        if (approvalLink && approvalLink.href) {
-          window.location.href = approvalLink.href; // ✅ Redirect to PayPal
-        } else {
-          throw new Error("❌ No approval link found in PayPal response.");
-        }
+        });
       } else {
-        alert(`❌ Payment failed: ${data.error}`);
+        //alert(data.error);
+        console.log(data.error);
+        setSnackbarMessage("Failed to place bid, bid too low");
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
       }
     } catch (error) {
-      console.error("❌ Error processing payment:", error);
-      alert("An error occurred while processing your payment.");
-    } finally {
-      setIsProcessing(false);
+      //alert("Something went wrong!");
+      //setError("Failed to send bid. Please try again.");
+      setSnackbarMessage("Failed to send bid. Please try again.");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
     }
   };
 
