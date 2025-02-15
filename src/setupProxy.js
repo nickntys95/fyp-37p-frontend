@@ -19,13 +19,4 @@ module.exports = function (app) {
             pathRewrite: { "^/api2": "" }, // Removes '/api2' when forwarding
         })
     );
-
-    app.use(
-        "/api3", // Proxy path for API 2
-        createProxyMiddleware({
-            target: "https://csit321-fyp-24-s4-37p.onrender.com", // Backend API 3
-            changeOrigin: true,
-            pathRewrite: { "^/api3": "" }, // Removes '/api3' when forwarding
-        })
-    );
 };
