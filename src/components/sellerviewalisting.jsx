@@ -274,7 +274,7 @@ export default function SellerViewAListing() {
         
         const {image_urls, ...formDataWithoutImages} = formData;
 
-        if (formData.auction_strategy === 'Sealed-Bid') {
+        if (formData.auction_strategy === 'Sealed-Bid' || formData.auction_strategy === 'Dutch') {
             formData.minimum_increment = 0;
         }
 
@@ -320,6 +320,11 @@ export default function SellerViewAListing() {
             alert("An error occurred while updating the listing.");
         }
     };
+
+    const endDatePassed = new Date() > new Date(formData.end_at);
+    console.log("Current Date:", new Date());
+    console.log("Auction End Date:", new Date(formData.end_at));
+    console.log("Has Auction Ended?:", new Date() > new Date(formData.end_at));
 
     return (
         <form onSubmit={handleSubmit}>
@@ -442,8 +447,8 @@ export default function SellerViewAListing() {
                             />
 
                             <FormLabel htmlFor="min-bid" required sx={{ fontSize: '1.30rem', paddingTop:'5px' }}>
-                            {formData.auction_strategy === 'Sealed-Bid'
-                                ? 'Disabled for Sealed-Bid auction'
+                            {formData.auction_strategy === 'Sealed-Bid' || formData.auction_strategy === 'Dutch'
+                                ? 'Disabled for Sealed-Bid & Dutch auction'
                                 : formData.auction_strategy === 'Dutch'
                                 ? 'Min Bid Decrement'
                                 : 'Min Bid Increment'
@@ -458,7 +463,7 @@ export default function SellerViewAListing() {
                                 sx={{ fontSize: '1.30rem' }}
                                 value={formData.minimum_increment}
                                 onChange={handleChange}
-                                disabled={formData.auction_strategy === 'Sealed-Bid'}
+                                disabled={formData.auction_strategy === 'Sealed-Bid' || formData.auction_strategy === 'Dutch'}
                             />
 
                             <FormLabel htmlFor="buy-price" required sx={{ fontSize: '1.30rem', paddingTop:'5px' }}>
@@ -506,9 +511,20 @@ export default function SellerViewAListing() {
                         >
                             Cancel
                         </Button>
-                            <Button sx={{ fontSize: '1.35rem',backgroundColor: '#0d6efd',color: 'white' }} type="submit" csize="small">
-                                Save Changes
-                            </Button>
+                        <Button 
+                            sx={{ 
+                                fontSize: '1.35rem', 
+                                backgroundColor: endDatePassed ? 'gray' : '#0d6efd', 
+                                color: endDatePassed ? 'white' : 'white', 
+                                cursor: endDatePassed ? 'not-allowed' : 'pointer',
+                                '&:hover': { backgroundColor: endDatePassed ? 'gray' : '#0056b3' } // Darker blue on hover if active
+                            }} 
+                            type="submit" 
+                            size="small"
+                            disabled={endDatePassed}  // Disable button if auction ended
+                        >
+                            Save Changes
+                        </Button>
                         </Box>
                     </Grid>
                 </Grid>

@@ -114,7 +114,7 @@ export default function CreateAuction() {
             ...prevState,
             [name]: value,
             // Ensure min bid increment is set to 0 if auction strategy is "Sealed-Bid"
-            minimum_increment: name === "auction_strategy" && value === "Sealed-Bid" ? 0 : prevState.minimum_increment
+            minimum_increment: name === "auction_strategy" && (value === "Sealed-Bid" || value === "Dutch")  ? 0 : prevState.minimum_increment
         }));
 
         if (files) {
@@ -334,7 +334,7 @@ export default function CreateAuction() {
                                 />
                             </FormGrid>
 
-                            {formData.auction_strategy !== "Sealed-Bid" && (
+                            {formData.auction_strategy !== "Sealed-Bid" && formData.auction_strategy !== "Dutch" && (
                             <FormGrid item xs={12} md={4}>
                                 <FormLabel sx={{ fontSize: '1.30rem' }} htmlFor="min-bid">
                                 {formData.auction_strategy === 'Dutch' ? 'Min Bid Decrement' : 'Min Bid Increment'}
@@ -357,7 +357,7 @@ export default function CreateAuction() {
 
                             <FormGrid item xs={12} md={4}>
                                 <FormLabel sx={{ fontSize: '1.30rem'  }}htmlFor="buy-price">
-                                {formData.auction_strategy === 'Dutch' ? 'Buy Now Price (value to be same as Starting Price)' : 'Buy Now Price (value to be higher than Starting Price)'}
+                                Buy Now Price
                                 </FormLabel>
                                 <OutlinedInput
                                 id="buy-price"

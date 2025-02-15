@@ -217,6 +217,18 @@ function Section({ title, list, type, navigate, setListings, listings}) {
         }
     };
 
+    const handleButtonClick = (id, type) => {
+        if (type === "current") {
+          // Handle view action
+          console.log("Viewing auction with ID:", id);
+          // You can navigate to the auction page or perform other actions
+          navigate(`/SellerMonitorBids/${id}`);
+        } else {
+          // Handle delete action
+          console.log("Deleting auction with ID:", id);
+          handleDeleteClick(id);  // Your existing delete handler
+        }
+      };
     
     return (
         <Container id="SAuctionListings" sx={{ display: 'flex', flexDirection: 'column',  m:0 }}>
@@ -274,19 +286,25 @@ function Section({ title, list, type, navigate, setListings, listings}) {
                                 }}
                             />
                             <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+                            {type !== "current" && (
+                                    <button
+                                        className="btn btn-primary"
+                                        style={{
+                                            borderRadius: "30px",
+                                            width: "100%"
+                                        }}
+                                        onClick={() => navigate(`/sellerviewalistingpage/${item.id}`)}
+                                    >
+                                        View Details
+                                    </button>
+                                )}
+                                
                                 <button
                                     className="btn btn-primary"
-                                    style={{ borderRadius: "30px", width: "100%"}}
-                                    onClick={() => navigate(`/sellerviewalistingpage/${item.id}`)}
-                                >
-                                    View Details
-                                </button>
-                                <button
-                                    className="btn btn-primary"
-                                    style={{ borderRadius: "30px", width: "100%", backgroundColor:"grey" }}
-                                    onClick={() => handleDeleteClick(item.id)}
-                                >
-                                    Delete
+                                    style={{ borderRadius: "30px", width: "100%", backgroundColor: "grey" }}
+                                    onClick={() => handleButtonClick(item.id, type)}
+                                    >
+                                    {type === "current" ? "View" : "Delete"}
                                 </button>
                             </Box>
                         </Card>

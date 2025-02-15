@@ -142,56 +142,6 @@ export default function AppAppBar() {
                 )}
             </li>
 
-
-
-                {/* Dropdown Menu for Notification*/}
-            <li
-                className="dropdown"
-                onMouseEnter={() => setShowNotDropdown(true)}
-                onMouseLeave={() => setShowNotDropdown(false)}
-                style={{ position: "relative" }}
-                >
-                <a href="#notifications" style={browseItemsStyle} onClick={(event) => event.preventDefault()}>
-                    Notification
-                </a>
-                {/* Dropdown Content */}
-                {showNotDropdown && (
-                    <ul style={dropdownMenuStyle}>
-                    <li>
-                    <button
-                        style={{
-                            backgroundColor: "white", // Set background to white
-                            color: "#333", // Set text color
-                            border: "none", // Remove border
-                            outline: "none", // Remove outline
-                            padding: "5px 5px", // Adjust padding
-                            fontSize: "16px", // Optional: adjust font size
-                            cursor: "pointer" // Optional: to make it look like a clickable button
-                        }}
-                        onClick={() => navigate("/my-bids")} // Navigate to the MyBids page
-                    >
-                        My Bids
-                    </button>
-                    </li>
-                    <li>
-                    <button
-                        style={{
-                            backgroundColor: "white", // Set background to white
-                            color: "#333", // Set text color
-                            border: "none", // Remove border
-                            outline: "none", // Remove outline
-                            padding: "5px 5px", // Adjust padding
-                            fontSize: "16px", // Optional: adjust font size
-                            cursor: "pointer" // Optional: to make it look like a clickable button
-                        }}
-                       
-                    >
-                        Listing Bids
-                    </button>
-                    </li>
-                    </ul>
-                )}
-            </li>
 			{/*support */}
              <li
                 className="dropdown"

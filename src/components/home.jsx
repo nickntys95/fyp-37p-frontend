@@ -446,6 +446,7 @@ function Home() {
                         description: selectedListing.description,
                         auction_strategy: selectedListing.auction_strategy,
                         minimum_bid: selectedListing.minimum_bid,
+		        minimum_increment: selectedListing.minimum_increment,
                         buy_now: selectedListing.buy_now,
                         start_at: selectedListing.start_at,
                         end_at: selectedListing.end_at,

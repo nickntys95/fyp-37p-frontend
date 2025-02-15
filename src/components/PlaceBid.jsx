@@ -15,6 +15,8 @@ function PlaceBid() {
   const [currentBids, setCurrentBids] = useState({}); // To store the current bid for each listing
   const token = sessionStorage.getItem("token") || "";
    const [listings, setListings] = useState([]);
+const minimumIncrement = parseFloat(location.state?.minimum_increment) || 10; // Default to 10 if not provided
+
    // Check if the bid has started
 const [isBidStarted, setIsBidStarted] = useState(false);
   // Extracting listing data from Link's state
@@ -115,15 +117,11 @@ const [isBidStarted, setIsBidStarted] = useState(false);
     // Get the current bid or fallback to the minimum bid
     const currentBid = listing.id in currentBids ? currentBids[listing.id] : minimumBid;
   
-    // Get minimum increment from the listing
-    const minimumIncrement = parseFloat(listing.minimum_increment) || 10; // Default to 10 if not provided
+    if (listing.auction_strategy === "english" || listing.auction_strategy === "sealed-bid") {
+      const requiredBid = currentBid + minimumIncrement;
   
-    // Validate the bid based on the auction strategy
-    if (listing.auction_strategy === "english") {
-      if (isNaN(bid) || bid < currentBid + minimumIncrement) {
-        setErrorMessage(
-          `Your bid must be at least $${(currentBid + minimumIncrement).toFixed(2)}.`
-        );
+      if (isNaN(bid) || bid !== requiredBid) {  
+        setErrorMessage(`Your bid must be exactly $${requiredBid.toFixed(2)} (increment: $${minimumIncrement}).`);
         setIsBidValid(false);
       } else {
         setErrorMessage("");
@@ -131,15 +129,7 @@ const [isBidStarted, setIsBidStarted] = useState(false);
       }
     } else if (listing.auction_strategy === "dutch") {
       if (isNaN(bid) || bid !== currentPrice) {
-        setErrorMessage(`For Dutch auctions, accept the current price of $${currentPrice.toFixed(2)}.`);
-        setIsBidValid(false);
-      } else {
-        setErrorMessage("");
-        setIsBidValid(true);
-      }
-    } else if (listing.auction_strategy === "sealed-bid") {
-      if (isNaN(bid) || bid < minimumBid) {
-        setErrorMessage(`Your bid must be at least $${minimumBid.toFixed(2)}.`);
+        setErrorMessage(`For Dutch auctions, you must accept the current price of $${currentPrice.toFixed(2)}.`);
         setIsBidValid(false);
       } else {
         setErrorMessage("");
@@ -147,6 +137,8 @@ const [isBidStarted, setIsBidStarted] = useState(false);
       }
     }
   };
+  
+  
   
   
 
@@ -274,7 +266,7 @@ const [isBidStarted, setIsBidStarted] = useState(false);
           : `$${(minimumBid + parseFloat(listing.minimum_increment || 10)).toFixed(2)}`
       }`}
       style={inputStyle}
-      disabled={!isBidStarted} // ❌ Disable input if bid hasn't started
+      disabled={!isBidStarted} //  Disable input if bid hasn't started
     />
     {errorMessage && <p style={{ color: "#ff4d4d", marginTop: "10px" }}>{errorMessage}</p>}
   </div>

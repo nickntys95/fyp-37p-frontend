@@ -31,6 +31,7 @@ function ReviewPurchase() {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error'
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchInitialBids = async () => {
     try {
@@ -75,6 +76,8 @@ function ReviewPurchase() {
   
   const handleSubmitBid = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true);
     console.log("🚀 Form submission started!");
   
     console.log("📝 new bid amount:", newBidAmount);
@@ -83,10 +86,13 @@ function ReviewPurchase() {
     if (!newBidAmount || parseFloat(newBidAmount) <= currentBid) {
       console.warn(`❌ Your bid must be greater than $${currentBid}`);
       //alert(`Your bid must be greater than the current highest bid $${currentBid}`);
-      const bidErrorMessage = `Your bid must be greater than the current highest bid $${currentBid}`;
+      const bidErrorMessage = `Your bid must be greater than the current highest bid $${currentBid}. Redirecting...`;
       setSnackbarMessage(bidErrorMessage);
       setSnackbarSeverity('error');
       setOpenSnackbar(true);
+      setTimeout(() => {
+        navigate(-1);
+      }, 3000)
       return;
     }
   
@@ -122,9 +128,12 @@ function ReviewPurchase() {
           });
         }, 3000);
       } else {
-        console.error("⚠️ API Error:", data.error);
         //setError(data.error || "Failed to place bid.")
-        setSnackbarMessage(`Failed to place bid. Increment below minimum. Redirecting...`);
+        if (data.error.includes('SELLER CANNOT BID.')) {
+          setSnackbarMessage("Seller cannot place bid.");
+        } else {
+          setSnackbarMessage(`Failed to place bid. Increment below minimum. Redirecting...`);
+        }
         setSnackbarSeverity('error');
         setOpenSnackbar(true);
         setTimeout(() => {
@@ -137,6 +146,10 @@ function ReviewPurchase() {
       setSnackbarMessage(`Failed to send bid. Please try again.`);
       setSnackbarSeverity('error');
       setOpenSnackbar(true);
+    } finally {
+      setTimeout(() => {
+          setIsSubmitting(false);
+      }, 3000);
     }
   };
 
@@ -260,9 +273,9 @@ function ReviewPurchase() {
                     fontSize: "13px",
                     cursor: "pointer",
                   }}
-                  type="submit"
+                  type="submit" disabled={isSubmitting}
                 >
-                  Confirm Bid
+                  {isSubmitting ? 'Confirm Bid' : 'Confirm Bid'}
                 </button>
               </form>
             </div>

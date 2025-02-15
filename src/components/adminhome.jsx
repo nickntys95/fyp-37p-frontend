@@ -5,6 +5,51 @@ import productsData from "../data/products.json";
 import AppAppBar from './adminappbar';
 import AppTheme from '../shared-theme/AppTheme';
 import { styled } from '@mui/system';
+import SearchBar from "./SearchBar";
+
+
+
+const ImageSlider = ({ images, onImageChange, onDeleteImage, onUploadImage, }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    const handlePrevious = (e) => {
+        e.preventDefault();
+        setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+        onImageChange(images[(currentIndex - 1 + images.length) % images.length]);
+    };
+
+    const handleNext = (e) => {
+        e.preventDefault();
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+        onImageChange(images[(currentIndex + 1) % images.length]);
+    };
+
+    const handleDotClick = (index) => {
+        setCurrentIndex(index);
+        onImageChange(images[index]); // Pass the new image URL
+    };
+
+    const handleDelete = () => {
+        onDeleteImage(images[currentIndex]); // Call delete function with selected image
+    };
+
+    return (
+        <div className="image-slider">
+            <img src={images[currentIndex]} alt={`Image ${currentIndex + 1}`} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
+            <a className="prev" onClick={handlePrevious}>&#10094;</a>
+            <a className="next" onClick={handleNext}>&#10095;</a>
+            <div style={{ textAlign: 'center' }}>
+                {images.map((_, index) => (
+                    <span
+                        key={index}
+                        className={`dot ${currentIndex === index ? 'active' : ''}`}
+                        onClick={() => handleDotClick(index)}
+                    ></span>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 function AdminHome() {
 	const [modalShow, setModalShow] = useState(false);
@@ -12,15 +57,8 @@ function AdminHome() {
 	const [selectedProduct, setSelectedProduct] = useState(null);
 	const [selectedCategory, setSelectedCategory] = useState("All");
 	const navigate = useNavigate();
-
-	// Chatbot States
-	const user_name = sessionStorage.getItem('user_name');  // Retrieve recovery key from sessionStorage
-	const [isChatOpen, setIsChatOpen] = useState(false);
-	const [username] = useState('meghan29'); //need replace to user_name in future
-	const [messages, setMessages] = useState([]);
-	const [userInput, setUserInput] = useState("");
-	const messagesEndRef = useRef(null);
-	  
+	const [results, setResults] = useState([]);
+	
 	const token = sessionStorage.getItem("token") || "";
 	const [selectedListing, setSelectedListing] = useState(null);
 	const [editListing, setEditListing] = useState(null);
@@ -29,7 +67,7 @@ function AdminHome() {
 	const [currentBids, setCurrentBids] = useState({}); // To store the current bid for each listing
 	const [selectedItem, setSelectedItem] = useState(null);
 	const [selectedFileName, setSelectedFileName] = useState("No file chosen");
-    const [currentImageUrl, setCurrentImageUrl] = useState(null); 
+	const [currentImageUrl, setCurrentImageUrl] = useState(null); 
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('success');
@@ -43,13 +81,17 @@ function AdminHome() {
 		setModalShow(false);
 		setSelectedListing(null);
 	};
+		
+	const handleEditClick = (id) => {
+		navigate(`/AdminEdit/${id}`)
+    };
 	
     // Load the item data based on itemId
     useEffect(() => {
 
         const fetchListings = async () => {
             try {
-                const response = await fetch('/api2/listing/get_all', {
+                const response = await fetch('https://fyp-37p-api-a16b479cb42b.herokuapp.com/listing/get_all', {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -82,92 +124,11 @@ function AdminHome() {
     selectedCategory === "All"
       ? listings
       : listings.filter((listing) => listing.item_type === selectedCategory);
-
-  // Toggle Chatbot Modal
-  const toggleChat = () => {
-    setIsChatOpen(!isChatOpen);
-  };
-
-  // Start Chat (Bot Welcome Message)
-  const handleStartChat = async () => {
-    toggleChat();
-    try {
-      const response = await fetch('/api1/start_chat/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, message: "start chat" }),
-      });
-
-      const data = await response.json();
-      setMessages([{ sender: 'bot', text: data.message }]); // Store bot's response
-    } catch (error) {
-      console.error('Error starting chat:', error);
-      setMessages([{ sender: 'bot', text: 'Failed to start chat, please try again.' }]);
-    }
-  };
-
-  // Handle Sending Messages
-  const handleSendMessage = async () => {
-    if (userInput.trim() === "") return; // Prevent empty messages
-
-    // Append user message
-    setMessages([...messages, { sender: "user", text: userInput }]);
-
-    try {
-      const response = await fetch('/api1/question_chat/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, message: userInput }),
-      });
-
-      const data = await response.json();
-      setMessages(prev => [...prev, { sender: "bot", text: data.message }]);
-      setUserInput(""); // Clear input after sending
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setMessages(prev => [...prev, { sender: "bot", text: 'Failed to send message, please try again.' }]);
-    }
-  };
-  
-  // Fetch Bids Separately After Listings Are Updated
-	const fetchBids = async (listings) => {
-		try {
-			console.log("📡 Fetching updated bids...");
-		  const bidRequests = listings.map(async (listing) => {
-			const bidResponse = await fetch("/api2/bid/get_all", {
-			  method: "POST",
-			  headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${token}`,
-			  },
-			  body: JSON.stringify({ listing_id: listing.id }),
-			});
-
-			if (!bidResponse.ok) return { id: listing.id, bid: 0 };
-
-			const bidData = await bidResponse.json();
-			const highestBid = bidData.successful
-			  ? Math.max(...bidData.bids.map((bid) => bid.amount), 0)
-			  : 0;
-
-			return { id: listing.id, bid: highestBid };
-		  });
-
-		  const bids = await Promise.all(bidRequests);
-		  const bidMap = bids.reduce((acc, { id, bid }) => ({ ...acc, [id]: bid }), {});
-
-		  console.log("📊 Updated Bid Map:", bidMap);
-		  setCurrentBids((prevBids) => ({ ...prevBids, ...bidMap })); // Merge new bids
-
-		} catch (err) {
-		  console.error(" Error fetching bids:", err);
-		}
-	};
   
 	const handleDeleteListing = async (listing) => {
 	  try {
-		const response = await fetch(`/api2/listing/delete/${listing.id}`, {
-		  method: "DELETE",
+		const response = await fetch(`/api2/listing/admin_redact/${listing.id}`, {
+		  method: "PUT",
 		  headers: {
 			"Authorization": `Bearer ${token}`,
 			"Content-Type": "application/json",
@@ -176,113 +137,117 @@ function AdminHome() {
 
 		if (!response.ok) {
 		  const errorData = await response.json(); // Make sure to await .json() before checking response.ok
-		  throw new Error(`Failed to delete listing: ${errorData.error}`);
+		  throw new Error(`Failed to redact listing: ${errorData.error}`);
 		}
 
 		const data = await response.json(); // If the response is ok, then parse the JSON
-		console.log("Delete data:", data); // This should log "Listing deleted successfully"
-		alert("Listing deleted successfully!");
+		console.log("Redact data:", data); // This should log "Listing deleted successfully"
+		alert("Listing redact successfully!");
+		window.location.reload()
 	  } catch (error) {
-		console.error("Error deleting listing:", error);
-		setError("Error deleting listing: " + error.message);
+		console.error("Error redact listing:", error);
+		setError("Error redact listing: " + error.message);
 	  }
 	};
 
-	
+    const handleImageChange = (imageUrl) => {
+        setCurrentImageUrl(imageUrl);
+        console.log("Current Image URL:", imageUrl);
+    };	
   return (
     <>
       <AppTheme>
         <CssBaseline enableColorScheme />
         <Box>
           <AppAppBar />
-		  <div className="container my-5" style={{ marginTop: "100px" }}>
-            <h1 className="mb-4 text-center text-uppercase">Listings</h1>
+			  <div className="container my-5" style={{ marginTop: "100px" }}>
+				<h1 className="mb-4 text-center text-uppercase">Marketplace</h1>
 
-            {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
+				{/* Search Bar */}
+				<div className="search-bar-container">
+				  <SearchBar setResults={setResults} setError={(err) => setError(err)} />
+				</div>
 
-            {/* Category Filter */}
-            <div className="mb-4 d-flex justify-content-center">
-              <select
-                className="form-select w-auto"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="All">All Categories</option>
-                {[...new Set(listings.map((listing) => listing.item_type))].map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
+				{error ? (
+				  <div className="error-container">
+					<p className="error-title">{error.title}</p>
+					{error.message && <p className="error-message">{error.message}</p>}
+					<ul className="error-suggestions">
+					  {error.suggestions && error.suggestions.map((suggestion, index) => (
+						<li key={index}>{suggestion}</li>
+					  ))}
+					</ul>
+				  </div>
+				) : (
+				  <div className="row gx-4 gy-4 align-items-stretch">
+					<div className="row gx-4 gy-4">
+					  {(results.length > 0 || results === null ? results : listings).map((listing) => (
+						<div key={listing.id} className="col-lg-4 col-md-6 d-flex align-items-stretch">
+						  <div className="card h-100 w-100 shadow d-flex flex-column">
+							<Box
+							  component="img"
+							  src={listing.image_urls?.length > 0 ? listing.image_urls[0] : "/placeholder.jpg"}
+							  alt={listing.title}
+							  sx={{
+								width: "100%",
+								height: "350px",
+								objectFit: "cover",
+								borderRadius: "2px",
+								border: "2px solid grey",
+							  }}
+							/>
+							<div className="card-body text-center d-flex flex-column justify-content-between">
 
-            {/* Render Listings */}
-            <div className="row">
-              {filteredListings.map((listing) => (
-                <div key={listing.id} className="col-lg-4 col-md-6 d-flex align-items-stretch">
-                  <div className="card h-100 w-100 shadow d-flex flex-column">
-					<Box
-					  component="img"
-					  src={listing.image_urls?.length > 0 ? listing.image_urls[0] : "/placeholder.jpg"}
-					  alt={listing.title}
-					  sx={{
-						width: "100%",
-						height: "350px",
-						objectFit: "cover",
-						borderRadius: "2px",
-						border: "2px solid grey",
-					  }}
-					/>
-					<div className="card-body text-center d-flex flex-column justify-content-between">
-					  
-					  {/* Title Section */}
-					  <h5 className="card-title" style={{ minHeight: "50px", fontSize: "1.2rem" }}>
-						{listing.title}
-					  </h5>
+							  {/* Title Section */}
+							  <h5 className="card-title" style={{ minHeight: "50px", fontSize: "1.2rem" }}>
+								{listing.title}
+							  </h5>
 
-					   {/* Description Section */}
-						<p 
-						  className="card-text mb-2" 
-						  style={{ 
-							minHeight: "40px",  // Ensures consistent height
-							maxHeight: "40px",  // Prevents overflow
-							overflow: "hidden", // Hides excess text
-							textOverflow: "ellipsis", // Adds "..." if text overflows
-							display: "-webkit-box",
-							WebkitLineClamp: 3, // Limits text to 3 lines
-							WebkitBoxOrient: "vertical"
-						  }}
-						>
-						  <strong>Description:</strong> {listing.description}
-						</p>
+							  {/* Description Section */}
+							  <p
+								className="card-text mb-2"
+								style={{
+								  minHeight: "40px",
+								  maxHeight: "40px",
+								  overflow: "hidden",
+								  textOverflow: "ellipsis",
+								  display: "-webkit-box",
+								  WebkitLineClamp: 3,
+								  WebkitBoxOrient: "vertical"
+								}}
+							  >
+								<strong>Description:</strong> {listing.description}
+							  </p>
 
-					  {/* Other Details */}
-					  <p className="card-text mb-2"><strong>Starting Price:</strong> ${listing.minimum_bid}</p>
-					  <p className="card-text mb-2"><strong>Current Bid:</strong> ${currentBids[listing.id] ?? "Loading..."}</p>
-					  <p className="card-text mb-2"><strong>Buy-Now Price:</strong> ${listing.buy_now}</p>
-					  <p className="card-text mb-2"><strong>Auction Type:</strong> {listing.auction_strategy}</p>
-                      <div className="d-flex justify-content-around">
-                        <button className="btn btn-primary" onClick={() => handleShowDetails(listing)}
-                          style={{ borderRadius: "30px" }}
-                        >
-                          View Details
-                        </button>
-                        <button className="btn btn-warning" onClick={() => handleShowDetails(listing)}
-                          style={{ borderRadius: "30px" }}
-                        >
-                          Edit
-                        </button>
-                        <button className="btn btn-danger" onClick={() => handleDeleteListing(listing)}
-                          style={{ borderRadius: "30px" }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+							  {/* Other Details */}
+							  <p className="card-text mb-2"><strong>Starting Price:</strong> ${listing.minimum_bid}</p>
+							  <p className="card-text mb-2"><strong>Buy-Now Price:</strong> ${listing.buy_now}</p>
+							  <p className="card-text mb-2"><strong>Auction Type:</strong> {listing.auction_strategy}</p>
+
+							  <div className="d-flex justify-content-around">
+								<button className="btn btn-primary" onClick={() => handleShowDetails(listing)}
+								  style={{ borderRadius: "30px" }}
+								>
+								  View Details
+								</button>
+								<button className="btn btn-warning" onClick={() => handleEditClick(listing.id)}
+								  style={{ borderRadius: "30px" }}
+								>
+								  Edit
+								</button>
+								<button className="btn btn-danger" onClick={() => handleDeleteListing(listing)}
+								  style={{ borderRadius: "30px" }}
+								>
+								  Redact
+								</button>
+							  </div>
+							</div>
+						  </div>
+						</div>
+					))}
+				  </div>
+				</div>
+			)}
 
             {/* Custom Modal */}
             {modalShow && selectedListing && (
@@ -297,12 +262,19 @@ function AdminHome() {
                     borderRadius: "10px", maxWidth: "600px", width: "90%", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.5)",
                   }}
                 >
+				<div>
+				<FormLabel sx={{ fontSize: '1.50rem' }}>Item Image</FormLabel>
+                <ImageSlider 
+                                images={selectedListing.image_urls} 
+                                onImageChange={handleImageChange} 
+				/>
+                </div>            
 				  <p><strong>Item_id:</strong> {selectedListing.id}</p>
                   <p><strong>Title:</strong> {selectedListing.title}</p>
                   <p><strong>Description:</strong> {selectedListing.description}</p>
 				  <p><strong>Auction Strategy:</strong> {selectedListing.auction_strategy}</p>
-			      <p><strong>Current Price:</strong> ${currentBids[selectedListing.id] ?? "Loading..."}</p>
 				  <p><strong>Min Bid:</strong> ${selectedListing.minimum_bid}</p>
+				  <p><strong>Minimum Increment:</strong> ${selectedListing.minimum_increment}</p>
 				  <p><strong>Buy-Now Price:</strong> ${selectedListing.buy_now}</p>
 				  <p><strong>Start Date:</strong> {new Date(selectedListing.start_at).toLocaleString("en-SG", { timeZone: "Asia/Singapore" })}</p>
                   <p><strong>End Date:</strong> {new Date(selectedListing.end_at).toLocaleString("en-SG", { timeZone: "Asia/Singapore" })}</p>
@@ -311,145 +283,6 @@ function AdminHome() {
               </div>
             )}
           </div>
-		)}	
-		
-		{/* Chatbot Button */}
-          <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 1000 }}>
-            <button
-              onClick={handleStartChat}
-              style={{
-                backgroundColor: "#007bff",
-                color: "#fff",
-                border: "none",
-                borderRadius: "50%",
-                width: "60px",
-                height: "60px",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                cursor: "pointer",
-                fontSize: "1.5rem",
-              }}
-            >
-              💬
-            </button>
-          </div>
-		{/* Chatbot Modal */}
-          {isChatOpen && (
-            <div
-              style={{
-                position: "fixed",
-                bottom: "90px",
-                right: "20px",
-                width: "350px",
-                height: "500px",
-                backgroundColor: "#fff",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                borderRadius: "10px",
-                padding: "10px",
-                zIndex: 1000,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
-              {/* Header */}
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "10px",
-                padding: "10px",
-                borderBottom: "1px solid #ddd"
-              }}>
-                <h4 style={{ margin: 0, color: "#000" }}>Bot Assistant</h4>
-                <button
-                  onClick={toggleChat}
-                  style={{
-                    backgroundColor: "transparent",
-                    border: "none",
-                    fontSize: "1.2rem",
-                    cursor: "pointer",
-                  }}
-                >
-                  &times;
-                </button>
-              </div>
-
-              {/* Messages Section */}
-              <div style={{
-                flex: 1,
-                overflowY: "auto",
-                marginBottom: "10px",
-                padding: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "5px",
-                backgroundColor: "#f9f9f9",
-              }}
-				ref={messagesEndRef}  // Attaching the ref here
-			  >
-                {messages.map((message, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      textAlign: message.sender === "user" ? "right" : "left",
-                      margin: "5px 0",
-                      padding: "8px",
-                      borderRadius: "5px",
-                      backgroundColor: message.sender === "user" ? "#007bff" : "#e9ecef",
-                      color: message.sender === "user" ? "#fff" : "#000",
-                      maxWidth: "80%",
-					  fontSize: "1.3rem",	
-					  whiteSpace: "pre-line",
-                      marginLeft: message.sender === "user" ? "auto" : "0",
-                      marginRight: message.sender === "user" ? "0" : "auto",
-                    }}
-                  >
-                    {message.text}
-                  </div>
-                ))}
-              </div>
-
-              {/* Input Section */}
-              <div style={{ padding: "10px", borderTop: "1px solid #ddd" }}>
-                <textarea
-                  rows="3"
-                  placeholder="Type your message..."
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-				  onKeyDown={(e) => {
-					if (e.key === "Enter" && !e.shiftKey) { 
-					  e.preventDefault(); // Prevents new line in textarea
-					  handleSendMessage();
-					}
-				  }}
-                  style={{
-                    width: "100%",
-                    padding: "2px",
-                    borderRadius: "5px",
-                    fontSize: "1.3rem",
-                    border: "1px solid #ccc",
-                    backgroundColor: "#fff",
-                    color: "#000",
-                    resize: "none",
-                  }}
-                ></textarea>
-                <button
-                  onClick={handleSendMessage}
-                  style={{
-                    marginTop: "10px",
-                    width: "100%",
-                    backgroundColor: "#007bff",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "5px",
-                    padding: "10px",
-                    fontSize: "1rem",
-                  }}
-                >
-                  Send
-                </button>
-              </div>
-            </div>
-          )}
 	   </Box>
       </AppTheme>
 
