@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordSuccess, onAdminSuccess}) => {
+export const LoginForm = ({
+  onRegisterSuccess,
+  onLoginSuccess,
+  onChangePasswordSuccess,
+  onAdminSuccess,
+}) => {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -10,7 +15,7 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isChangePassword, setIsChangePassword] = useState(false);
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [username, setUsername] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -18,13 +23,16 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
     e.preventDefault();
 
     try {
-      const response = await fetch("https://fyp-37p-api-a16b479cb42b.herokuapp.com/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await response.json();
 
@@ -60,13 +68,16 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
     }
 
     try {
-      const response = await fetch("/api2/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password, name }),
-      });
+      const response = await fetch(
+        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password, name }),
+        }
+      );
 
       const data = await response.json();
 
@@ -80,7 +91,7 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
         onRegisterSuccess(data);
         sessionStorage.setItem("email", email);
         sessionStorage.setItem("password", password);
-        sessionStorage.setItem('recovery_key', data.recovery_key);
+        sessionStorage.setItem("recovery_key", data.recovery_key);
       } else {
         setError(data.error);
         setEmail("");
@@ -106,15 +117,18 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    
+
     try {
-      const response = await fetch("/api2/auth/change_password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({email: forgotPasswordEmail}),
-      });
+      const response = await fetch(
+        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/auth/change_password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: forgotPasswordEmail }),
+        }
+      );
 
       const data = await response.json();
 
@@ -122,13 +136,12 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
         setMessage("Password reset successfully");
         setError("");
         onChangePasswordSuccess(data);
-        sessionStorage.setItem('forgotPasswordEmail', forgotPasswordEmail);
-        sessionStorage.setItem('message', 'Password reset successfully');
-        
+        sessionStorage.setItem("forgotPasswordEmail", forgotPasswordEmail);
+        sessionStorage.setItem("message", "Password reset successfully");
       } else {
         setError(data.error);
         setMessage("");
-        sessionStorage.removeItem('forgotPasswordEmail');
+        sessionStorage.removeItem("forgotPasswordEmail");
       }
     } catch (error) {
       console.error("The error is: ", error.message);
@@ -138,10 +151,10 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
   };
 
   useEffect(() => {
-    const message = sessionStorage.getItem('message');
+    const message = sessionStorage.getItem("message");
     if (message) {
       setMessage(message);
-      sessionStorage.removeItem('message');
+      sessionStorage.removeItem("message");
     }
   }, []);
 
@@ -161,33 +174,36 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
     e.preventDefault();
 
     try {
-      const response = await fetch("/api2/auth/login_admin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await fetch(
+        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/auth/login_admin",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, password }),
+        }
+      );
 
       const data = await response.json();
-	  console.log(username);
-	  console.log(password);
+      console.log(username);
+      console.log(password);
 
       if (data.successful) {
         setMessage("Admin logged in successfully");
-		    setUsername("")
-		    setPassword("");
+        setUsername("");
+        setPassword("");
         setError("");
         onAdminSuccess(data);
-		sessionStorage.setItem("username", username);
-		sessionStorage.setItem("token", data.token);
+        sessionStorage.setItem("username", username);
+        sessionStorage.setItem("token", data.token);
       } else {
         setError(data.error);
-		    setUsername("");
+        setUsername("");
         setPassword("");
         setMessage("");
-		sessionStorage.removeItem("username", username);
-    sessionStorage.removeItem("token", data.token);
+        sessionStorage.removeItem("username", username);
+        sessionStorage.removeItem("token", data.token);
       }
     } catch (error) {
       console.error("The error is: ", error.message);
@@ -196,10 +212,19 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
     }
   };
 
-
   return (
     <div>
-      <form onSubmit={isChangePassword ? handleChangePassword : isAdmin ? handleAdminLogin : isRegister ? handleRegister : handleLogin}>
+      <form
+        onSubmit={
+          isChangePassword
+            ? handleChangePassword
+            : isAdmin
+            ? handleAdminLogin
+            : isRegister
+            ? handleRegister
+            : handleLogin
+        }
+      >
         {isChangePassword ? (
           <div>
             <h2 className="text-3xl text-center font-extralight">
@@ -222,7 +247,7 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
               </div>
               {error && <p className="error">{error}</p>}
               {message && <p className="message">{message}</p>}
-              <button type="submit" className="btn btn-form" >
+              <button type="submit" className="btn btn-form">
                 Continue
               </button>
               <div>
@@ -274,23 +299,26 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
               </button>
               <div>
                 <p>
-                  Not an Admin? Back to <Link to="" onClick={() => setIsAdmin(false)}>Login</Link>
+                  Not an Admin? Back to{" "}
+                  <Link to="" onClick={() => setIsAdmin(false)}>
+                    Login
+                  </Link>
                 </p>
               </div>
             </div>
           </div>
         ) : (
-        // ... end of admin form content ... 
+          // ... end of admin form content ...
           <div>
-              <div>
-                <p>
-                  Click here to proceed to&nbsp;
-                  <Link to="" onClick={handleAdminToggle}>
-                     admin
-                  </Link>
-                  &nbsp;login
-                </p>
-              </div>
+            <div>
+              <p>
+                Click here to proceed to&nbsp;
+                <Link to="" onClick={handleAdminToggle}>
+                  admin
+                </Link>
+                &nbsp;login
+              </p>
+            </div>
             <h2 className="text-3xl text-center font-extralight">
               {isRegister ? "Create Account" : "Login"}
             </h2>
@@ -337,9 +365,12 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
               </div>
               {isRegister && (
                 <div className="mb-4">
-                  <label className="text-gray-600 text-sm">Confirm Password</label>
+                  <label className="text-gray-600 text-sm">
+                    Confirm Password
+                  </label>
                   <input
-                    type="password" value={confirmPassword}
+                    type="password"
+                    value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="login-input"
                     placeholder="Enter Your Confirm Password"
@@ -361,7 +392,9 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
               </button>
               <div>
                 <p>
-                  {isRegister ? "Already have an account?" : "Don't have an account?"}{" "}
+                  {isRegister
+                    ? "Already have an account?"
+                    : "Don't have an account?"}{" "}
                   <Link to="" onClick={handleRegisterToggle}>
                     {isRegister ? "Login" : "Sign up"}
                   </Link>
@@ -369,8 +402,7 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
               </div>
             </div>
           </div>
-        )
-        }
+        )}
       </form>
     </div>
   );

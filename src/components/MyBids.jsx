@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import AppAppBar from "./appbar";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -42,7 +42,15 @@ function CountdownTimer({ endAt }) {
   return (
     <div className="timer-box">
       <h6>Time Remaining</h6>
-      <div style={{ background: "#f8f9fa", padding: "15px", borderRadius: "8px", textAlign: "center", marginBottom: "15px" }}>
+      <div
+        style={{
+          background: "#f8f9fa",
+          padding: "15px",
+          borderRadius: "8px",
+          textAlign: "center",
+          marginBottom: "15px",
+        }}
+      >
         <h4>
           {isExpired
             ? "BIDDING CLOSED"
@@ -68,13 +76,16 @@ function MyBids() {
     const fetchListings = async () => {
       try {
         console.log("Fetching listings...");
-        const response = await fetch("/api2/listing/get_all", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          "https://fyp-37p-api-a16b479cb42b.herokuapp.com/listing/get_all",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!response.ok) throw new Error("Failed to fetch listings");
 
@@ -96,22 +107,29 @@ function MyBids() {
         console.log("Fetching user bids...");
         const allBids = await Promise.all(
           listings.map(async (listing) => {
-            const response = await fetch("/api2/bid/get_all", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ listing_id: listing.id }),
-            });
+            const response = await fetch(
+              "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ listing_id: listing.id }),
+              }
+            );
 
             const data = await response.json();
             if (!response.ok || !data.successful) return null;
 
-            const userBids = data.bids.filter((bid) => bid.user_name === userName);
+            const userBids = data.bids.filter(
+              (bid) => bid.user_name === userName
+            );
 
             if (userBids.length > 0) {
-              userBids.sort((a, b) => new Date(b.inserted_at) - new Date(a.inserted_at));
+              userBids.sort(
+                (a, b) => new Date(b.inserted_at) - new Date(a.inserted_at)
+              );
               return { ...userBids[0], listing: listing };
             }
 
@@ -137,24 +155,31 @@ function MyBids() {
       try {
         console.log("Fetching current highest bids...");
         const bidRequests = userBids.map(async (bid) => {
-          const response = await fetch("/api2/bid/get_all", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ listing_id: bid.listing.id }),
-          });
+          const response = await fetch(
+            "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ listing_id: bid.listing.id }),
+            }
+          );
 
           const data = await response.json();
-          if (!response.ok || !data.successful) return { id: bid.listing.id, highestBid: "No bids yet" };
+          if (!response.ok || !data.successful)
+            return { id: bid.listing.id, highestBid: "No bids yet" };
 
           const highestBid = Math.max(...data.bids.map((b) => b.amount), 0);
           return { id: bid.listing.id, highestBid };
         });
 
         const bids = await Promise.all(bidRequests);
-        const bidMap = bids.reduce((acc, { id, highestBid }) => ({ ...acc, [id]: highestBid }), {});
+        const bidMap = bids.reduce(
+          (acc, { id, highestBid }) => ({ ...acc, [id]: highestBid }),
+          {}
+        );
 
         setCurrentBids(bidMap);
       } catch (error) {
@@ -171,83 +196,109 @@ function MyBids() {
 
   return (
     <AppTheme>
-    <CssBaseline enableColorScheme />
-    <Box>
-      <AppAppBar />
-      <div className="container my-5" style={{ paddingTop: "80px" }}>
-       <h1 className="mb-4 text-center text-uppercase">Current Bids</h1>
-        {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
-  
-        {userBids.length > 0 ? (
-          <div className="row gx-4 gy-4 align-items-stretch">
-            {userBids.map((bid, index) => (
-              <div key={index} className="col-lg-4 col-md-6 d-flex align-items-stretch">
-                <div className="card h-100 w-100 shadow d-flex flex-column">
-                <Box
+      <CssBaseline enableColorScheme />
+      <Box>
+        <AppAppBar />
+        <div className="container my-5" style={{ paddingTop: "80px" }}>
+          <h1 className="mb-4 text-center text-uppercase">Current Bids</h1>
+          {error && (
+            <p style={{ color: "red", textAlign: "center" }}>{error}</p>
+          )}
+
+          {userBids.length > 0 ? (
+            <div className="row gx-4 gy-4 align-items-stretch">
+              {userBids.map((bid, index) => (
+                <div
+                  key={index}
+                  className="col-lg-4 col-md-6 d-flex align-items-stretch"
+                >
+                  <div className="card h-100 w-100 shadow d-flex flex-column">
+                    <Box
                       component="img"
-                      src={bid.listing?.image_urls?.length > 0 ? bid.listing.image_urls[0] : "/placeholder.jpg"}
+                      src={
+                        bid.listing?.image_urls?.length > 0
+                          ? bid.listing.image_urls[0]
+                          : "/placeholder.jpg"
+                      }
                       alt={bid.listing?.title || "Listing Image"}
                       sx={{
-                          width: "100%",
-                          height: "350px",
-                          objectFit: "cover",
-                          borderRadius: "2px",
-                          border: "2px solid grey",
+                        width: "100%",
+                        height: "350px",
+                        objectFit: "cover",
+                        borderRadius: "2px",
+                        border: "2px solid grey",
                       }}
-                  />
-                  <div className="card-body text-center d-flex flex-column">
-                    {/* Title and Bid Info */}
-                    <h5 className="card-title">{bid.listing?.title || "Unknown Title"}</h5>
-                    <p><strong>My Bid:</strong> ${bid.amount}</p>
-                    <p><strong>Current Highest Bid:</strong> ${currentBids[bid.listing?.id] || "Loading..."}</p>
-  
-                    {/* Ensure the Countdown Timer stays consistent in height */}
-                    <div className="flex-grow-1 d-flex align-items-center justify-content-center" style={{ minHeight: "60px" }}>
-                      <CountdownTimer endAt={bid.listing?.end_at} />
-                    </div>
-  
-                    {/* Button Section - Always Aligned at Bottom */}
-                    <div className="mt-auto d-flex flex-column">
-                      {new Date(bid.listing?.end_at) < new Date() ? (
-                        bid.amount === currentBids[bid.listing?.id] ? (
+                    />
+                    <div className="card-body text-center d-flex flex-column">
+                      {/* Title and Bid Info */}
+                      <h5 className="card-title">
+                        {bid.listing?.title || "Unknown Title"}
+                      </h5>
+                      <p>
+                        <strong>My Bid:</strong> ${bid.amount}
+                      </p>
+                      <p>
+                        <strong>Current Highest Bid:</strong> $
+                        {currentBids[bid.listing?.id] || "Loading..."}
+                      </p>
+
+                      {/* Ensure the Countdown Timer stays consistent in height */}
+                      <div
+                        className="flex-grow-1 d-flex align-items-center justify-content-center"
+                        style={{ minHeight: "60px" }}
+                      >
+                        <CountdownTimer endAt={bid.listing?.end_at} />
+                      </div>
+
+                      {/* Button Section - Always Aligned at Bottom */}
+                      <div className="mt-auto d-flex flex-column">
+                        {new Date(bid.listing?.end_at) < new Date() ? (
+                          bid.amount === currentBids[bid.listing?.id] ? (
+                            <button
+                              className="btn btn-success w-100"
+                              onClick={() =>
+                                navigate("/checkout-mybids", {
+                                  state: {
+                                    productName: bid.listing.title,
+                                    price: bid.amount,
+                                  },
+                                })
+                              }
+                            >
+                              Proceed to Checkout
+                            </button>
+                          ) : (
+                            <button
+                              className="btn btn-secondary w-100"
+                              disabled
+                            >
+                              Auction Closed
+                            </button>
+                          )
+                        ) : (
                           <button
-                            className="btn btn-success w-100"
+                            className="btn btn-primary w-100"
                             onClick={() =>
-                              navigate("/checkout-mybids", {
-                                state: { productName: bid.listing.title, price: bid.amount },
+                              navigate("/bidding-page", {
+                                state: { listing: bid.listing },
                               })
                             }
                           >
-                            Proceed to Checkout
+                            Go to Bidding Page
                           </button>
-                        ) : (
-                          <button className="btn btn-secondary w-100" disabled>
-                            Auction Closed
-                          </button>
-                        )
-                      ) : (
-                        <button
-                          className="btn btn-primary w-100"
-                          onClick={() =>
-                            navigate("/bidding-page", { state: { listing: bid.listing } })
-                          }
-                        >
-                          Go to Bidding Page
-                        </button>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center">No bids found for your account.</p>
-        )}
-      </div>
-    </Box>
-  </AppTheme>
-  
+              ))}
+            </div>
+          ) : (
+            <p className="text-center">No bids found for your account.</p>
+          )}
+        </div>
+      </Box>
+    </AppTheme>
   );
 }
 
