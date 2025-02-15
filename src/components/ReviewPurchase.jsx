@@ -4,45 +4,50 @@ import AppAppBar from "./appbar";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 
 function ReviewPurchase() {
   const location = useLocation();
   const navigate = useNavigate();
 
   // Extract bidAmount and listing from location.state or fallback to sessionStorage
-  const bidAmount = location.state?.bidAmount || sessionStorage.getItem("bidAmount");
-  const listing = location.state?.listing || JSON.parse(sessionStorage.getItem("listing"));
+  const bidAmount =
+    location.state?.bidAmount || sessionStorage.getItem("bidAmount");
+  const listing =
+    location.state?.listing || JSON.parse(sessionStorage.getItem("listing"));
   //console.log("Stored listing:", storedListing);
   // Log bidAmount and listing for debugging
   console.log("ReviewPurchase Debugging - bidAmount:", bidAmount);
-  
+
   //console.log("ReviewPurchase Debugging - listing:", listing);
   const [newBidAmount, setNewBidAmount] = useState(bidAmount);
   const [error, setError] = useState(null);
   const [currentBid, setCurrentBid] = useState(0); // Store the current highest bid
 
   const token = sessionStorage.getItem("token"); // Retrieve token
-  const listingId = listing?.id; // Extract listing 
+  const listingId = listing?.id; // Extract listing
   console.log("ReviewPurchase Debugging - listing ID:", listingId);
   // Fetch the current highest bid from the API
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error'
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error'
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchInitialBids = async () => {
     try {
-      const response = await fetch("/api2/bid/get_all", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ listing_id: listingId }),
-      });
+      const response = await fetch(
+        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ listing_id: listingId }),
+        }
+      );
 
       const data = await response.json();
 
@@ -65,7 +70,7 @@ function ReviewPurchase() {
       console.error("Listing data is undefined or null!");
       return;
     }
-  
+
     console.log("Navigating to /place-bid with listing:", listing);
     navigate("/place-bid", {
       state: {
@@ -73,51 +78,54 @@ function ReviewPurchase() {
       },
     });
   };
-  
+
   const handleSubmitBid = async (e) => {
     e.preventDefault();
     if (isSubmitting) return; // Prevent multiple submissions
     setIsSubmitting(true);
     console.log("🚀 Form submission started!");
-  
+
     console.log("📝 new bid amount:", newBidAmount);
     console.log("📌 Listing ID:", listingId);
-  
+
     if (!newBidAmount || parseFloat(newBidAmount) <= currentBid) {
       console.warn(`❌ Your bid must be greater than $${currentBid}`);
       //alert(`Your bid must be greater than the current highest bid $${currentBid}`);
       const bidErrorMessage = `Your bid must be greater than the current highest bid $${currentBid}. Redirecting...`;
       setSnackbarMessage(bidErrorMessage);
-      setSnackbarSeverity('error');
+      setSnackbarSeverity("error");
       setOpenSnackbar(true);
       setTimeout(() => {
         navigate(-1);
-      }, 3000)
+      }, 3000);
       return;
     }
-  
+
     try {
       console.log("🔗 Sending bid to API...");
-      const response = await fetch("/api2/bid/make", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          listing_id: listingId,
-          amount: newBidAmount,
-        }),
-      });
-  
+      const response = await fetch(
+        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            listing_id: listingId,
+            amount: newBidAmount,
+          }),
+        }
+      );
+
       const data = await response.json();
       console.log("✅ API Response:", data);
-  
+
       if (data.successful) {
         console.log("🎉 Bid placed successfully!");
         //alert("Bid placed successfully!");
-        setSnackbarMessage('Bid placed successfully! Redirecting...');
-        setSnackbarSeverity('success');
+        setSnackbarMessage("Bid placed successfully! Redirecting...");
+        setSnackbarSeverity("success");
         setOpenSnackbar(true);
         setTimeout(() => {
           navigate("/bidding-page", {
@@ -129,33 +137,35 @@ function ReviewPurchase() {
         }, 3000);
       } else {
         //setError(data.error || "Failed to place bid.")
-        if (data.error.includes('SELLER CANNOT BID.')) {
+        if (data.error.includes("SELLER CANNOT BID.")) {
           setSnackbarMessage("Seller cannot place bid.");
         } else {
-          setSnackbarMessage(`Failed to place bid. Increment below minimum. Redirecting...`);
+          setSnackbarMessage(
+            `Failed to place bid. Increment below minimum. Redirecting...`
+          );
         }
-        setSnackbarSeverity('error');
+        setSnackbarSeverity("error");
         setOpenSnackbar(true);
         setTimeout(() => {
           navigate(-1);
-        }, 3000)
+        }, 3000);
       }
     } catch (error) {
       console.error("❌ API Request Failed:", error);
       //setError("Failed to send bid. Please try again.");
       setSnackbarMessage(`Failed to send bid. Please try again.`);
-      setSnackbarSeverity('error');
+      setSnackbarSeverity("error");
       setOpenSnackbar(true);
     } finally {
       setTimeout(() => {
-          setIsSubmitting(false);
+        setIsSubmitting(false);
       }, 3000);
     }
   };
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
-};
+  };
 
   useEffect(() => {
     if (listingId) {
@@ -165,7 +175,11 @@ function ReviewPurchase() {
 
   // Early return for invalid listing data
   if (!listing) {
-    return <div style={{ textAlign: "center", color: "red" }}>Error: Invalid listing data</div>;
+    return (
+      <div style={{ textAlign: "center", color: "red" }}>
+        Error: Invalid listing data
+      </div>
+    );
   }
 
   return (
@@ -203,9 +217,13 @@ function ReviewPurchase() {
               marginBottom: "20px",
             }}
           >
-           <Box
+            <Box
               component="img"
-              src={listing?.image_urls?.length > 0 ? listing.image_urls[0] : "/placeholder.jpg"}
+              src={
+                listing?.image_urls?.length > 0
+                  ? listing.image_urls[0]
+                  : "/placeholder.jpg"
+              }
               alt={listing?.title || "Listing Image"}
               sx={{
                 width: "100%",
@@ -215,7 +233,9 @@ function ReviewPurchase() {
                 border: "2px solid grey",
               }}
             />
-            <h2 style={{ fontSize: "1.8rem", margin: "0", textAlign: "center" }}>
+            <h2
+              style={{ fontSize: "1.8rem", margin: "0", textAlign: "center" }}
+            >
               {listing?.title}
             </h2>
           </div>
@@ -256,7 +276,7 @@ function ReviewPurchase() {
               marginTop: "20px",
             }}
           >
-           {/* <button  style={cancelButtonStyle}
+            {/* <button  style={cancelButtonStyle}
             onClick={handleEditBid} // Edit bid action
             >
               Edit Bid
@@ -273,9 +293,10 @@ function ReviewPurchase() {
                     fontSize: "13px",
                     cursor: "pointer",
                   }}
-                  type="submit" disabled={isSubmitting}
+                  type="submit"
+                  disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Confirm Bid' : 'Confirm Bid'}
+                  {isSubmitting ? "Confirm Bid" : "Confirm Bid"}
                 </button>
               </form>
             </div>
@@ -283,18 +304,18 @@ function ReviewPurchase() {
         </div>
       </div>
       <Snackbar
-          open={openSnackbar}
-          autoHideDuration={4000}  // Duration in ms before Snackbar auto closes
+        open={openSnackbar}
+        autoHideDuration={4000} // Duration in ms before Snackbar auto closes
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <MuiAlert
           onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-          >
-          <MuiAlert
-              onClose={handleCloseSnackbar}
-              severity={snackbarSeverity}
-              sx={{ width: '100%', fontSize: '1.50rem' }}
-          >
-              {snackbarMessage}
-          </MuiAlert>
+          severity={snackbarSeverity}
+          sx={{ width: "100%", fontSize: "1.50rem" }}
+        >
+          {snackbarMessage}
+        </MuiAlert>
       </Snackbar>
     </AppTheme>
   );

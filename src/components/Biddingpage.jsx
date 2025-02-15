@@ -5,14 +5,14 @@ import AppAppBar from "./appbar";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 
 function BiddingPage() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    navigate('/home');
+    navigate("/home");
   };
   const location = useLocation();
   const chartRef = useRef(null);
@@ -20,7 +20,8 @@ function BiddingPage() {
   const ws = useRef(null); // WebSocket ref
   const { state } = location;
   const initialBid = parseFloat(state?.bidAmount) || 0;
-  const listing = location.state?.listing || JSON.parse(sessionStorage.getItem("listing"));
+  const listing =
+    location.state?.listing || JSON.parse(sessionStorage.getItem("listing"));
   const [currentBid, setCurrentBid] = useState(0);
   const [newBidAmount, setNewBidAmount] = useState(""); // State for new bid amount
   const [bids, setBids] = useState([]);
@@ -34,21 +35,24 @@ function BiddingPage() {
   const [timeLeft, setTimeLeft] = useState();
   const [isExpired, setIsExpired] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error'
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error'
   const token = sessionStorage.getItem("token"); // or localStorage.getItem('token');
   const listingId = listing?.id;
   // Function to fetch initial bids using the REST API
   const fetchInitialBids = async () => {
     try {
-      const response = await fetch("/api2/bid/get_all", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ listing_id: listingId }),
-      });
+      const response = await fetch(
+        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ listing_id: listingId }),
+        }
+      );
 
       const data = await response.json();
 
@@ -171,9 +175,6 @@ function BiddingPage() {
       );
     };
 
-
-
-
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
       console.log("Received data: ", data); // Pretty log of the incoming data
@@ -200,24 +201,27 @@ function BiddingPage() {
     e.preventDefault();
     setNewBidAmount(""); // Reset input field
     try {
-      const response = await fetch("/api2/bid/make", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          listing_id: listingId,
-          amount: newBidAmount,
-        }),
-      });
+      const response = await fetch(
+        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            listing_id: listingId,
+            amount: newBidAmount,
+          }),
+        }
+      );
 
       const data = await response.json();
       if (data.successful) {
         // If the bid is successful, update the state
         //alert("Bid placed successfully!");
-        setSnackbarMessage('Bid placed successfully!');
-        setSnackbarSeverity('success');
+        setSnackbarMessage("Bid placed successfully!");
+        setSnackbarSeverity("success");
         setOpenSnackbar(true);
         navigate("/bidding-page", {
           state: {
@@ -228,22 +232,22 @@ function BiddingPage() {
       } else {
         //alert(data.error);
         console.log(data.error);
-        setSnackbarMessage('Failed to place bid, bid too low');
-        setSnackbarSeverity('error');
+        setSnackbarMessage("Failed to place bid, bid too low");
+        setSnackbarSeverity("error");
         setOpenSnackbar(true);
       }
     } catch (error) {
       //alert("Something went wrong!");
       //setError("Failed to send bid. Please try again.");
-      setSnackbarMessage('Failed to send bid. Please try again.');
-      setSnackbarSeverity('error');
+      setSnackbarMessage("Failed to send bid. Please try again.");
+      setSnackbarSeverity("error");
       setOpenSnackbar(true);
     }
   };
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
-};
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -334,7 +338,11 @@ function BiddingPage() {
           <div style={{ textAlign: "center" }}>
             <Box
               component="img"
-              src={listing?.image_urls?.length > 0 ? listing.image_urls[0] : "/placeholder.jpg"}
+              src={
+                listing?.image_urls?.length > 0
+                  ? listing.image_urls[0]
+                  : "/placeholder.jpg"
+              }
               alt={listing?.title || "Listing Image"}
               sx={{
                 width: "200px",
@@ -345,8 +353,10 @@ function BiddingPage() {
                 border: "2px solid grey",
               }}
             />
-            <h4 className="mt-3">{listing.title}</h4> {/* Replace 'product.name' with 'listing.title' */}
-            <p className="text-muted">{listing.description}</p> {/* Replace 'product.description' with 'listing.description' */}
+            <h4 className="mt-3">{listing.title}</h4>{" "}
+            {/* Replace 'product.name' with 'listing.title' */}
+            <p className="text-muted">{listing.description}</p>{" "}
+            {/* Replace 'product.description' with 'listing.description' */}
           </div>
           {/* Chart Section */}
           <div
@@ -413,8 +423,8 @@ function BiddingPage() {
                       ? "Min. bid $" + (currentBid + minimumIncrement)
                       : ""
                     : minimumBid
-                      ? "Min. bid $" + minimumBid
-                      : ""
+                    ? "Min. bid $" + minimumBid
+                    : ""
                 }
                 style={{
                   width: "100%",
@@ -455,21 +465,21 @@ function BiddingPage() {
                   borderRadius: "8px",
                   cursor: "pointer",
                 }}
-                onClick={handleLogout} s
-
+                onClick={handleLogout}
+                s
               >
                 Leave Room
               </button>
               <Snackbar
                 open={openSnackbar}
-                autoHideDuration={4000}  // Duration in ms before Snackbar auto closes
+                autoHideDuration={4000} // Duration in ms before Snackbar auto closes
                 onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                anchorOrigin={{ vertical: "top", horizontal: "center" }}
               >
                 <MuiAlert
                   onClose={handleCloseSnackbar}
                   severity={snackbarSeverity}
-                  sx={{ width: '100%', fontSize: '1.50rem' }}
+                  sx={{ width: "100%", fontSize: "1.50rem" }}
                 >
                   {snackbarMessage}
                 </MuiAlert>

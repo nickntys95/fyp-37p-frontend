@@ -42,13 +42,16 @@ function CheckoutPage() {
     setIsProcessing(true);
 
     try {
-      const response = await fetch(`/api2/bid/confirm_payment/${order_id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/confirm_payment/${order_id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await response.json();
       console.log("✅ Payment Confirmation Response:", data);
@@ -88,23 +91,31 @@ function CheckoutPage() {
 
       console.log("📌 Sending Payment Request:", requestBody);
 
-      const response = await fetch("/api2/bid/init_payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await fetch(
+        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/init_payment",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
 
       const data = await response.json();
-      console.log("📌 Full PayPal API Response:", JSON.stringify(data, null, 2));
+      console.log(
+        "📌 Full PayPal API Response:",
+        JSON.stringify(data, null, 2)
+      );
 
       if (data.successful && data.order && Array.isArray(data.order.links)) {
         console.log("📌 Available PayPal Links:", data.order.links);
 
         // ✅ Extract the correct PayPal approval link
-        const approvalLink = data.order.links.find(link => link.rel === "payer-action");
+        const approvalLink = data.order.links.find(
+          (link) => link.rel === "payer-action"
+        );
 
         if (approvalLink && approvalLink.href) {
           console.log("✅ Redirecting to PayPal:", approvalLink.href);
@@ -144,7 +155,11 @@ function CheckoutPage() {
                 <ul className="list-group mb-3 sticky-top">
                   <li className="list-group-item text-center">
                     <img
-                      src={image_urls && image_urls.length > 0 ? image_urls[0] : "/placeholder.jpg"}
+                      src={
+                        image_urls && image_urls.length > 0
+                          ? image_urls[0]
+                          : "/placeholder.jpg"
+                      }
                       alt={title || "Product Image"}
                       style={{
                         width: "100%",
@@ -171,26 +186,49 @@ function CheckoutPage() {
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label htmlFor="firstName">First name</label>
-                      <input type="text" className="form-control" id="firstName" required />
-                      <div className="invalid-feedback">Valid first name is required.</div>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="firstName"
+                        required
+                      />
+                      <div className="invalid-feedback">
+                        Valid first name is required.
+                      </div>
                     </div>
                     <div className="col-md-6 mb-3">
                       <label htmlFor="lastName">Last name</label>
-                      <input type="text" className="form-control" id="lastName" required />
-                      <div className="invalid-feedback">Valid last name is required.</div>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="lastName"
+                        required
+                      />
+                      <div className="invalid-feedback">
+                        Valid last name is required.
+                      </div>
                     </div>
                   </div>
 
                   <div className="mb-3">
                     <label htmlFor="email">Email</label>
                     <input type="email" className="form-control" id="email" />
-                    <div className="invalid-feedback">Please enter a valid email address.</div>
+                    <div className="invalid-feedback">
+                      Please enter a valid email address.
+                    </div>
                   </div>
 
                   <div className="mb-3">
                     <label htmlFor="address">Address</label>
-                    <input type="text" className="form-control" id="address" required />
-                    <div className="invalid-feedback">Please enter your shipping address.</div>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="address"
+                      required
+                    />
+                    <div className="invalid-feedback">
+                      Please enter your shipping address.
+                    </div>
                   </div>
 
                   <hr className="mb-4" />
@@ -215,14 +253,20 @@ function CheckoutPage() {
                   {paymentMethod === "paypal" && (
                     <div className="mt-3">
                       <p className="text-muted">
-                        You will be redirected to PayPal to complete your payment.
+                        You will be redirected to PayPal to complete your
+                        payment.
                       </p>
                     </div>
                   )}
 
                   <hr className="mb-4" />
 
-                  <button className="btn btn-primary btn-lg" type="button" onClick={handlePaymentMethodChange} disabled={isProcessing}>
+                  <button
+                    className="btn btn-primary btn-lg"
+                    type="button"
+                    onClick={handlePaymentMethodChange}
+                    disabled={isProcessing}
+                  >
                     {isProcessing ? "Processing..." : "Continue to Checkout"}
                   </button>
                 </form>
