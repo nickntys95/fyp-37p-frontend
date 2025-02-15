@@ -15,6 +15,8 @@ function Home() {
   const [currentBids, setCurrentBids] = useState({}); // To store the current bid for each listing
   const [results, setResults] = useState([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [dutchPrices, setDutchPrices] = useState(0); // Store dynamic prices for Dutch auctions
+
   // Chatbot States
   const user_name = sessionStorage.getItem("user_name"); // Retrieve recovery key from sessionStorage
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -229,6 +231,45 @@ function Home() {
 
     return () => clearTimeout(timeoutId); // Clear timeout on unmount
   }, []);
+  // ✅ Update Dutch Auction Prices Dynamically
+  useEffect(() => {
+    const updateDutchPrices = () => {
+      const updatedPrices = {};
+
+      listings.forEach((listing) => {
+        if (listing.auction_strategy.toLowerCase() === "dutch") {
+          const startTime = new Date(listing.start_at).getTime();
+          const endTime = new Date(listing.end_at).getTime();
+          const totalDuration = (endTime - startTime) / 1000;
+          const startingPrice = parseFloat(listing.buy_now);
+
+          const now = new Date().getTime();
+
+          // Before auction starts, set price to initial buy_now
+          if (now < startTime) {
+            updatedPrices[listing.id] = startingPrice;
+          }
+          // If auction has ended, set price to 0
+          else if (now >= endTime) {
+            updatedPrices[listing.id] = 0;
+          }
+          // Calculate the price reduction over time
+          else {
+            const elapsedTime = (now - startTime) / 1000;
+            let newPrice = startingPrice * (1 - elapsedTime / totalDuration);
+            updatedPrices[listing.id] = Math.max(newPrice, 0);
+          }
+        }
+      });
+
+      setDutchPrices(updatedPrices);
+    };
+
+    updateDutchPrices(); // Initial update
+    const interval = setInterval(updateDutchPrices, 1000); // Update price every second
+
+    return () => clearInterval(interval); // Cleanup interval on unmount
+  }, [listings]);
 
   return (
     <>
@@ -314,17 +355,43 @@ function Home() {
                           </p>
 
                           {/* Other Details */}
-                          <p className="card-text mb-2">
-                            <strong>Starting Price:</strong> $
-                            {listing.minimum_bid}
-                          </p>
-                          <p className="card-text mb-2">
-                            <strong>Current Bid:</strong> $
-                            {currentBids[listing.id] ?? "Loading..."}
-                          </p>
-                          <p className="card-text mb-2">
-                            <strong>Buy-Now Price:</strong> ${listing.buy_now}
-                          </p>
+                          {listing.auction_strategy.toLowerCase() ===
+                          "dutch" ? (
+                            <p className="card-text mb-2">
+                              <strong>Starting Price:</strong>${listing.buy_now}
+                            </p>
+                          ) : (
+                            <p className="card-text mb-2">
+                              <strong>Starting Price:</strong> $
+                              {listing.minimum_bid}
+                            </p>
+                          )}
+                          {/* ✅ Show dynamically updated price for Dutch auctions */}
+                          {listing.auction_strategy.toLowerCase() ===
+                          "dutch" ? (
+                            <p className="card-text mb-2">
+                              <strong>Current Price:</strong> $
+                              {dutchPrices[listing.id]?.toFixed(2) ||
+                                "Calculating..."}
+                            </p>
+                          ) : (
+                            <p className="card-text mb-2">
+                              <strong>Buy-Now Price:</strong> ${listing.buy_now}
+                            </p>
+                          )}
+                          {/* Hide "Current Bid" if Auction Strategy is Sealed-Bid */}
+                          {listing.auction_strategy.toLowerCase() !==
+                          "sealed-bid" ? (
+                            <p className="card-text mb-2">
+                              <strong>Current Bid:</strong> $
+                              {currentBids[listing.id] ?? "Loading..."}
+                            </p>
+                          ) : (
+                            <p className="card-text mb-2">
+                              <strong>Current Bid:</strong> ********
+                            </p>
+                          )}
+
                           <p className="card-text mb-2">
                             <strong>Auction Type:</strong>{" "}
                             {listing.auction_strategy}
@@ -495,10 +562,18 @@ function Home() {
                     <strong>Starting Price:</strong> $
                     {selectedListing.minimum_bid}
                   </p>
-                  <p>
-                    <strong>Current Bid:</strong>{" "}
-                    {currentBids[selectedListing?.id] ?? "Loading..."}
-                  </p>
+                  {/* Hide "Current Bid" if Auction Strategy is Sealed-Bid */}
+                  {selectedListing.auction_strategy.toLowerCase() !==
+                  "sealed-bid" ? (
+                    <p>
+                      <strong>Current Bid:</strong>{" "}
+                      {currentBids[selectedListing?.id] ?? "Loading..."}
+                    </p>
+                  ) : (
+                    <p>
+                      <strong>Current Bid:</strong> ********
+                    </p>
+                  )}
                   <p>
                     <strong>Buy-Now Price:</strong> ${selectedListing.buy_now}
                   </p>
@@ -506,7 +581,6 @@ function Home() {
                     <strong>Auction Type:</strong>{" "}
                     {selectedListing.auction_strategy}
                   </p>
-
                   {/* Buttons Section - Ensuring Single Row Alignment */}
                   <div className="d-flex justify-content-between mt-3 gap-2">
                     {/* Close Button */}

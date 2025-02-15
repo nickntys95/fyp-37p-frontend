@@ -8,14 +8,14 @@ import Box from "@mui/material/Box";
 function PlaceBid() {
   const [bidAmount, setBidAmount] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [currentPrice, setCurrentPrice] = useState(0); // For Dutch auctions
+
   const [isBidValid, setIsBidValid] = useState(false); // To control button state
   const location = useLocation();
   const navigate = useNavigate();
   const [currentBids, setCurrentBids] = useState({}); // To store the current bid for each listing
   const token = sessionStorage.getItem("token") || "";
   const [listings, setListings] = useState([]);
-  const minimumIncrement = parseFloat(location.state?.minimum_increment) || 10; // Default to 10 if not provided
+  const [currentPrice, setCurrentPrice] = useState(0);
 
   // Check if the bid has started
   const [isBidStarted, setIsBidStarted] = useState(false);
@@ -90,30 +90,57 @@ function PlaceBid() {
     if (listing.start_at) {
       const startTime = new Date(listing.start_at).getTime();
       const currentTime = new Date().getTime();
-      const adjustedCurrentTime = currentTime + 8 * 60 * 60 * 1000;
-      console.log("adjustedCurrentTime:", adjustedCurrentTime);
-      console.log("startTime:", startTime);
-      setIsBidStarted(adjustedCurrentTime >= startTime);
+      setIsBidStarted(currentTime >= startTime);
     }
   }, [listing.start_at]);
   // Initialize the current price for Dutch auction
   useEffect(() => {
-    if (listing && listing.auction_strategy === "dutch") {
-      setCurrentPrice(minimumBid);
-    }
-  }, [listing, minimumBid]);
+    if (listing && listing.auction_strategy?.toLowerCase() === "dutch") {
+      const startingPrice = parseFloat(listing.buy_now);
+      const startTime = new Date(listing.start_at).getTime();
+      const endTime = new Date(listing.end_at).getTime();
+      const totalDuration = (endTime - startTime) / 1000; // Convert to seconds
 
-  // Simulate Dutch auction price reduction
-  useEffect(() => {
-    if (listing && listing.auction_strategy === "dutch") {
-      const interval = setInterval(() => {
-        setCurrentPrice((prevPrice) =>
-          Math.max(prevPrice - 10, minimumBid * 0.5)
-        );
-      }, 50000); // Reduce price every 50 seconds
-      return () => clearInterval(interval);
+      const updatePrice = () => {
+        const now = new Date().getTime();
+
+        // Handle invalid auction times
+        if (startTime >= endTime) {
+          console.error(
+            "Invalid auction duration: start_at must be before end_at"
+          );
+          setCurrentPrice(startingPrice);
+          return;
+        }
+
+        // Before auction starts, set price to initial buy_now
+        if (now < startTime) {
+          setCurrentPrice(startingPrice);
+          return;
+        }
+
+        // If auction has ended, set price to 0
+        if (now >= endTime) {
+          setCurrentPrice(0);
+          return;
+        }
+
+        // Calculate elapsed time
+        const elapsedTime = (now - startTime) / 1000; // Seconds
+
+        // Price reduction formula
+        let newPrice = startingPrice * (1 - elapsedTime / totalDuration);
+
+        // Ensure price does not go below 0
+        setCurrentPrice(Math.max(newPrice, 0));
+      };
+
+      updatePrice(); // Initial call to set the price
+      const interval = setInterval(updatePrice, 1000); // Update every second
+
+      return () => clearInterval(interval); // Cleanup interval on unmount
     }
-  }, [listing, minimumBid]);
+  }, [listing]);
 
   const handleBidChange = (e) => {
     const bid = parseFloat(e.target.value);
@@ -121,31 +148,40 @@ function PlaceBid() {
 
     // Get the current bid or fallback to the minimum bid
     const currentBid =
-      listing.id in currentBids ? currentBids[listing.id] : minimumBid;
+      listing.id in currentBids ? currentBids[listing.id] : listing.minimum_bid;
 
-    if (
-      listing.auction_strategy === "english" ||
-      listing.auction_strategy === "sealed-bid"
-    ) {
-      const requiredBid = currentBid + minimumIncrement;
+    // Get minimum increment from the listing
+    const minimumIncrement = parseFloat(listing.minimum_increment) || 10; // Default to 10 if not provided
 
-      if (isNaN(bid) || bid !== requiredBid) {
+    // Validate the bid based on the auction strategy
+    if (listing.auction_strategy === "english") {
+      if (isNaN(bid) || bid < currentBid + minimumIncrement) {
         setErrorMessage(
-          `Your bid must be exactly $${requiredBid.toFixed(
+          `Your bid must be at least $${(currentBid + minimumIncrement).toFixed(
             2
-          )} (increment: $${minimumIncrement}).`
+          )}.`
         );
         setIsBidValid(false);
       } else {
         setErrorMessage("");
         setIsBidValid(true);
       }
-    } else if (listing.auction_strategy === "dutch") {
+    } else if (listing.auction_strategy === "Dutch") {
       if (isNaN(bid) || bid !== currentPrice) {
         setErrorMessage(
-          `For Dutch auctions, you must accept the current price of $${currentPrice.toFixed(
+          `For Dutch auctions, accept the current price of $${currentPrice.toFixed(
             2
           )}.`
+        );
+        setIsBidValid(false);
+      } else {
+        setErrorMessage("");
+        setIsBidValid(true);
+      }
+    } else if (listing.auction_strategy === "sealed-bid") {
+      if (isNaN(bid) || bid < listing.minimum_bid) {
+        setErrorMessage(
+          `Your bid must be at least $${listing.minimum_bid.toFixed(2)}.`
         );
         setIsBidValid(false);
       } else {
@@ -156,26 +192,40 @@ function PlaceBid() {
   };
 
   const handlePlaceBid = () => {
-    const bidValue = parseFloat(bidAmount);
+    let bidValue = parseFloat(bidAmount);
 
-    if (
-      !bidAmount ||
-      (listing.auction_strategy === "english" && bidValue <= minimumBid) ||
-      (listing.auction_strategy === "dutch" && bidValue !== currentPrice) ||
-      (listing.auction_strategy === "sealed-bid" && bidValue < minimumBid)
-    ) {
-      setErrorMessage(
-        `Your bid must comply with the ${listing.auction_strategy} auction rules.`
-      );
-      return;
+    // Force bidAmount to match currentPrice in Dutch auctions
+    if (listing.auction_strategy.toLowerCase() === "dutch") {
+      bidValue = currentPrice;
     }
 
-    navigate("/review-purchase", {
-      state: { bidAmount, listing },
-    });
-    sessionStorage.setItem("bidAmount", bidAmount);
-    sessionStorage.setItem("listing", JSON.stringify(listing));
+    console.log(
+      `✅ Placing bid: ${bidValue} for auction type: ${listing.auction_strategy}`
+    );
+
+    // ✅ Parse structured data for ReviewPurchase page
+    const bidData = {
+      bidAmount: bidValue.toFixed(2),
+      listing: {
+        id: listing.id,
+        title: listing.title,
+        description: listing.description,
+        auction_strategy: listing.auction_strategy,
+        minimum_bid: listing.minimum_bid,
+        buy_now: listing.buy_now,
+        image_urls: listing.image_urls || [],
+        start_at: listing.start_at,
+        end_at: listing.end_at,
+      },
+    };
+
+    // ✅ Store in sessionStorage for persistence
+    sessionStorage.setItem("bidData", JSON.stringify(bidData));
+
+    // ✅ Navigate to ReviewPurchase page with state
+    navigate("/review-purchase", { state: bidData });
   };
+
   return (
     <AppTheme>
       <CssBaseline enableColorScheme />
@@ -257,15 +307,15 @@ function PlaceBid() {
             </div>
             <div>
               <label style={labelStyle}>
-                {listing.auction_strategy === "dutch"
+                {listing.auction_strategy === "Dutch"
                   ? "Current Price"
                   : "Minimum Bid"}
               </label>
               <input
                 type="text"
-                value={`$${(listing.auction_strategy === "dutch"
+                value={`$${(listing.auction_strategy === "Dutch"
                   ? currentPrice
-                  : minimumBid
+                  : listing.minimum_bid
                 ).toFixed(2)}`}
                 disabled
                 style={inputStyle}
@@ -276,7 +326,9 @@ function PlaceBid() {
               <input
                 type="text"
                 value={
-                  listing.id in currentBids && currentBids[listing.id] > 0
+                  listing.auction_strategy.toLowerCase() === "sealed-bid"
+                    ? "Hidden" // ✅ Mask current bid for sealed-bid auctions
+                    : listing.id in currentBids && currentBids[listing.id] > 0
                     ? `$${currentBids[listing.id].toFixed(2)}`
                     : "No Current Bids"
                 }
@@ -284,7 +336,6 @@ function PlaceBid() {
                 style={inputStyle}
               />
             </div>
-
             {/* ✅ New "Bid Started / Not Started" Label */}
             <div>
               <label style={labelStyle}>Auction started / Not started</label>
@@ -297,25 +348,18 @@ function PlaceBid() {
                 style={inputStyle}
               />
             </div>
-
             <div>
               <label style={labelStyle}>Enter Your Bid</label>
               <input
                 type="number"
-                value={bidAmount}
+                value={
+                  listing.auction_strategy.toLowerCase() === "dutch"
+                    ? currentPrice.toFixed(2)
+                    : bidAmount
+                }
                 onChange={handleBidChange}
-                placeholder={`Enter an amount greater than ${
-                  listing.id in currentBids
-                    ? `$${(
-                        currentBids[listing.id] +
-                        parseFloat(listing.minimum_increment || 10)
-                      ).toFixed(2)}`
-                    : `$${(
-                        minimumBid + parseFloat(listing.minimum_increment || 10)
-                      ).toFixed(2)}`
-                }`}
+                placeholder={`Enter an amount`}
                 style={inputStyle}
-                disabled={!isBidStarted} //  Disable input if bid hasn't started
               />
               {errorMessage && (
                 <p style={{ color: "#ff4d4d", marginTop: "10px" }}>
@@ -341,7 +385,7 @@ function PlaceBid() {
               onClick={handlePlaceBid}
               disabled={!isBidStarted}
             >
-              {listing.auction_strategy === "dutch"
+              {listing.auction_strategy === "Dutch"
                 ? "Accept Price"
                 : "Place Bid"}
             </button>
