@@ -18,7 +18,7 @@ export const LoginForm = ({ onRegisterSuccess, onLoginSuccess, onChangePasswordS
     e.preventDefault();
 
     try {
-      const response = await fetch("/api2/auth/login", {
+      const response = await fetch("https://fyp-37p-api-a16b479cb42b.herokuapp.com/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
