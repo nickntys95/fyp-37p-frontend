@@ -1,0 +1,112 @@
+{
+  "Header": {
+    "title": "Bid, Buy, and Sell with Ease",
+    "paragraph": "Explore our online auction platform"
+  },
+  "About": {
+    "paragraph": "Welcome to CSIT321-FYP-24-S4-37P, where every bid takes you closer to owning something extraordinary. Founded in 2024, we've grown from a small startup to one of the premier online auction platforms, trusted by thousands of users worldwide. We specialize in curating a diverse array of items, from rare collectibles to high-end electronics, ensuring that every auction is a thrilling and rewarding experience. Our team of passionate experts brings over [X years] of combined experience in the auction industry. We are dedicated to providing a transparent, fair, and secure bidding environment, leveraging cutting-edge technology to keep your data safe and your transactions seamless.",
+    "Why": [
+      "Trust and Reliability: Strict compliance with industry standards ensures a trustworthy and secure bidding environment.",
+      "User-Friendly Experience: Enjoy seamless navigation and an intuitive interface, tailored for both seasoned bidders and newcomers.",
+      "Customer Service: Our 24/7 support team is dedicated to your satisfaction and ready to help with any inquiries.",
+      "Secure Transactions: Advanced security measures protect your personal and transactional information for worry-free bidding."
+    ],
+    "Why2": [
+      "Global Access: Bid on unique items from anywhere, connecting global sellers and buyers through our expansive platform.",
+      "Innovative Tools: From automatic bidding to detailed histories, our tools are designed to enhance your bidding strategy.",
+      "Comprehensive Support: Receive guidance through every step of the auction process, from registration to final sale.",
+      "Community Engagement: Connect with fellow enthusiasts, share insights, and enjoy exclusive events and content."
+    ]
+  },
+  "Services": [
+    {
+      "icon": "fa fa-globe",
+      "name": "Website Integration",
+      "text": "Streamline auction listings and real-time bidding directly from your website, boosting user experience and efficiency."
+    },
+    {
+      "icon": "fa fa-cart-arrow-down",
+      "name": "E-commerce Solutions",
+      "text": "Boost your platform with advanced e-commerce features and secure payment systems."
+    },
+    {
+	  "icon": "fa fa-shield",
+	  "name": "Enhanced Security Measures",
+      "text": "Maximize security with end-to-end encryption, 2FA, and continuous monitoring to protect your data."
+    },
+    {
+      "icon": "fa fa-language",
+      "name": "Multilingual Support",
+      "text": "Serve a global audience with customizable support for multiple languages."
+    },
+    {
+      "icon": "fa fa-plane",
+      "name": "Global Shipping Services",
+      "text": "Provide global logistics, ensuring safe and timely delivery for all users."
+    },
+    {
+      "icon": "fa fa-pie-chart",
+      "name": "Data Analytics",
+      "text": "Use powerful analytics to track trends and behaviors, enhancing listings and sales."
+    }
+  ],
+  "Team": [
+    {
+      "img": "img/team/team-member1.jpg",
+      "name": "Lee Wai Yang",
+      "job": "Project Leader"
+    },
+    {
+      "img": "img/team/team-member2.jpg",
+      "name": "Mohamed Irfanudeen s/o Mohd Sihahabudeen",
+      "job": "Team Member"
+    },
+    {
+      "img": "img/team/team-member3.jpg",
+      "name": "Muhammad Shakir Bin Mohd Adam",
+      "job": "Team Member"
+    },
+    {
+      "img": "img/team/team-member4.jpg",
+      "name": "Ng Chun Kiat Nicholas",
+      "job": "Team Member"
+    },
+    {
+      "img": "img/team/team-member5.jpg",
+      "name": "Nickson Tan Yong Siang",
+      "job": "Team Member"
+    },
+    {
+      "img": "img/team/team-member6.jpg",
+      "name": "Chen Si Heng",
+      "job": "Team Member"
+    }
+  ],
+  "Contact": {
+    "address": "461 Clementi Road, Singapore 599491",
+    "phone": "+65 6248 9100 (Security)",
+    "email": "rr@sim.edu.sg"
+  },
+  "Features": [
+    {
+      "icon": "fa fa-comments-o",
+      "title": "Interactive Communication",
+      "text": "Stay connected and engage directly with auctioneers and sellers through our interactive messaging system. Get your questions answered in real time and make informed bidding decisions."
+    },
+    {
+      "icon": "fa fa-bullhorn",
+      "title": "Real-Time Notifications",
+      "text": "Never miss an update with our real-time notifications. Receive alerts on auction statuses, bid confirmations, and special announcements directly within your dashboard."
+    },
+    {
+      "icon": "fa fa-group",
+      "title": "Join Our Community",
+      "text": "Become part of a thriving community of collectors and enthusiasts. Participate in discussions, connect with like-minded members, and share your passion for collectibles."
+    },
+    {
+      "icon": "fa fa-magic",
+      "title": "Comprehensive Support Tools",
+      "text": "Gain access to a suite of tools designed to simplify your buying and selling process. Our support team is also ready to assist you with any inquiries."
+    }
+  ]
+}

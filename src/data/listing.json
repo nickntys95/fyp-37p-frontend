@@ -1,0 +1,87 @@
+[
+    {
+      "item_id": 1,
+      "item_name": "Vintage Lamp",
+      "item_description": "Floral Tiffany Table Lamp, Home Decor, Handmade Antique Lighting, Flower Tiffany lamp",
+      "item_type": "Product",
+      "Auction Strategy": "English",
+      "starting_price": 80,
+      "min_bid_inc": 10,
+      "buy_now": 200,
+      "a_start_date": "21/12/2024 10:15:23",
+      "a_end_date": "23/12/2024 15:45:11"
+    },
+    {
+      "item_id": 2,
+      "item_name": "Chinese Vase",
+      "item_description": "Chinese vase furniture cup oriental object antique style in painted ceramic",
+      "item_type": "Product",
+      "Auction Strategy": "Dutch",
+      "starting_price": 2000,
+      "min_bid_inc": 50,
+      "buy_now": 3000,
+      "a_start_date": "22/12/2024 08:23:47",
+      "a_end_date": "24/12/2024 14:55:32"
+    },
+    {
+      "item_id": 3,
+      "item_name": "Wooden Dining Table",
+      "item_description": "Handcrafted wooden dining table with a living edge walnut wooden dining table",
+      "item_type": "Product",
+      "Auction Strategy": "English",
+      "starting_price": 900,
+      "min_bid_inc": 20,
+      "buy_now": 1100,
+      "a_start_date": "23/12/2024 09:35:12",
+      "a_end_date": "25/12/2024 16:20:54"
+    },
+    {
+      "item_id": 4,
+      "item_name": "DIY Speaker Kit (Bluetooth 5.0)",
+      "item_description": "Portable Bluetooth speaker with high-quality sound.",
+      "item_type": "Product",
+      "Auction Strategy": "English",
+      "starting_price": 150,
+      "min_bid_inc": 10,
+      "buy_now": 200,
+      "a_start_date": "10/03/2025 07:50:29",
+      "a_end_date": "12/03/2025 18:10:17"
+    },
+    {
+      "item_id": 5,
+      "item_name": "YAMAHA Electric Guitar",
+      "item_description": "Electric guitar with solid body and excellent sound quality.",
+      "item_type": "Product",
+      "Auction Strategy": "Dutch",
+      "starting_price": 470,
+      "min_bid_inc": 10,
+      "buy_now": 700,
+      "a_start_date": "13/03/2025 11:15:22",
+      "a_end_date": "24/03/2025 17:45:39"
+    },
+    {
+      "item_id": 6,
+      "item_name": "Rolex Submariner Date",
+      "item_description": "Model Case: Oyster, 41 mm, Oystersteel",
+      "item_type": "Product",
+      "Auction Strategy": "English",
+      "starting_price": 50000,
+      "min_bid_inc": 200,
+      "buy_now": 57000,
+      "a_start_date": "01/01/2025 09:00:11",
+      "a_end_date": "03/03/2025 23:59:59"
+    },
+    {
+      "item_id": 7,
+      "item_name": "Lady Dior Flap",
+      "item_description": "Lee Kun Yong Edition Small Grey",
+      "item_type": "Product",
+      "Auction Strategy": "Sealed-Bid",
+      "starting_price": 12000,
+      "min_bid_inc": 100,
+      "buy_now": 15000,
+      "a_start_date": "11/12/2024 12:40:55",
+      "a_end_date": "13/12/2024 20:33:44"
+    }
+  ]
+  

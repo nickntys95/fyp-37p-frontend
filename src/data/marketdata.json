@@ -1,0 +1,15 @@
+{
+  "marketData": {
+    "productName": "Gucci Bifold Wallet",
+    "pricingHistory": [
+      { "date": "2024-01-01", "price": 450 },
+      { "date": "2024-02-01", "price": 460 },
+      { "date": "2024-03-01", "price": 440 }
+    ],
+    "recentSales": [
+      { "buyer": "John Doe", "date": "2024-03-05", "price": 451, "item": "Gucci Bifold Wallet" },
+      { "buyer": "Jane Smith", "date": "2024-02-20", "price": 449, "item": "Prada Compact Wallet" },
+      { "buyer": "Mark Lee", "date": "2024-01-15", "price": 455, "item": "Louis Vuitton Wallet" }
+    ]
+  }
+}

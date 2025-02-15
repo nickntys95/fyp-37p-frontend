@@ -1,0 +1,127 @@
+{
+  "categories": [
+    {
+      "name": "Wallets",
+      "products": [
+        {
+          "id": 1,
+          "name": "Gucci Jumbo Wallet",
+          "image": "/img/products/jumbowallet.jpg",
+          "AskPrice": "$400",
+          "lastSale": "$477",
+          "description": "A premium Gucci wallet crafted with care.",
+          "features": ["Premium leather", "Compact design", "Durable material"],
+          "price": "$700",
+          "stock": "In Stock",
+          "biddingStrategy": "english"
+        },
+        {
+          "id": 2,
+          "name": "Gucci Classic Wallet",
+          "image": "/img/products/jumbowallet.jpg",
+          "AskPrice": "$329",
+          "lastSale": "$269",
+          "description": "Classic Gucci wallet in black leather.",
+          "features": ["Elegant design", "Lightweight", "High quality"],
+          "price": "$600",
+          "stock": "Only 5 left",
+          "biddingStrategy": "sealed-bid"
+        },
+        {
+          "id": 3,
+          "name": "Prada Compact Wallet",
+          "image": "/img/products/pradawallet.jpg",
+          "AskPrice": "$350",
+          "lastSale": "$299",
+          "description": "Compact wallet with sleek Prada design.",
+          "features": ["Compact size", "Luxury design", "Durable material"],
+          "price": "$900",
+          "stock": "In Stock",
+          "biddingStrategy": "dutch"
+        }
+      ]
+    },
+    {
+      "name": "Bags",
+      "products": [
+        {
+          "id": 4,
+          "name": "Louis Vuitton Tote Bag",
+          "image": "/img/products/lvbag.jpg",
+          "AskPrice": "$1200",
+          "lastSale": "$1150",
+          "description": "Stylish tote bag with iconic LV pattern.",
+          "features": ["Large capacity", "Luxury material", "Iconic design"],
+          "price": "$1900",
+          "stock": "Only 3 left",
+          "biddingStrategy": "dutch"
+        },
+        {
+          "id": 5,
+          "name": "Chanel Shoulder Bag",
+          "image": "/img/products/chanelbag.jpg",
+          "AskPrice": "$2500",
+          "lastSale": "$2450",
+          "description": "Elegant shoulder bag for any occasion.",
+          "features": ["Classic design", "High-quality leather", "Versatile"],
+          "price": "$3400",
+          "stock": "In Stock",
+          "biddingStrategy": "english"
+        },
+        {
+          "id": 6,
+          "name": "Prada Crossbody Bag",
+          "image": "/img/products/pradabag.jpg",
+          "AskPrice": "$800",
+          "lastSale": "$750",
+          "description": "Functional crossbody bag for everyday use.",
+          "features": ["Adjustable strap", "Lightweight", "Durable material"],
+          "price": "$900",
+          "stock": "Only 10 left",
+          "biddingStrategy": "sealed-bid"
+        }
+      ]
+    },
+    {
+      "name": "Shoes",
+      "products": [
+        {
+          "id": 7,
+          "name": "Nike Air Max",
+          "image": "/img/products/nikeairmax.jpg",
+          "AskPrice": "$150",
+          "lastSale": "$140",
+          "description": "Comfortable and stylish running shoes.",
+          "features": ["Air cushioning", "Lightweight", "Durable"],
+          "price": "$500",
+          "stock": "In Stock",
+          "biddingStrategy": "sealed-bid"
+        },
+        {
+          "id": 8,
+          "name": "Adidas Ultraboost",
+          "image": "/img/products/adidasultraboost.jpg",
+          "AskPrice": "$180",
+          "lastSale": "$170",
+          "description": "Performance sneakers with superior comfort.",
+          "features": ["Boost cushioning", "Breathable material", "Stylish design"],
+          "price": "$380",
+          "stock": "Only 8 left",
+          "biddingStrategy": "dutch"
+        },
+        {
+          "id": 9,
+          "name": "Gucci Ace Sneakers",
+          "image": "/img/products/guccisneakers.jpg",
+          "AskPrice": "$650",
+          "lastSale": "$600",
+          "description": "Luxury sneakers with classic Gucci design.",
+          "features": ["Premium leather", "Iconic design", "Comfortable fit"],
+          "price": "$900",
+          "stock": "Only 2 left",
+          "biddingStrategy": "english"
+        }
+      ]
+    }
+  ]
+}
