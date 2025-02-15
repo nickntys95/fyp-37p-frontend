@@ -90,7 +90,7 @@ function TransactionsManagement() {
                     PayPal Transaction ID
                   </TableCell>
                   <TableCell align="left" sx={{ fontSize: 15, color: "white" }}>
-                    Reversed
+                    Confirmed
                   </TableCell>
                 </TableRow>
               </TableHead>
