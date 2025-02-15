@@ -4,6 +4,8 @@ import AppAppBar from "./appbar";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
 function ReviewPurchase() {
   const location = useLocation();
@@ -25,6 +27,11 @@ function ReviewPurchase() {
   const listingId = listing?.id; // Extract listing 
   console.log("ReviewPurchase Debugging - listing ID:", listingId);
   // Fetch the current highest bid from the API
+
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error'
+
   const fetchInitialBids = async () => {
     try {
       const response = await fetch("/api2/bid/get_all", {
@@ -75,7 +82,11 @@ function ReviewPurchase() {
   
     if (!newBidAmount || parseFloat(newBidAmount) <= currentBid) {
       console.warn(`❌ Your bid must be greater than $${currentBid}`);
-      alert(`Your bid must be greater than the current highest bid $${currentBid}`);
+      //alert(`Your bid must be greater than the current highest bid $${currentBid}`);
+      const bidErrorMessage = `Your bid must be greater than the current highest bid $${currentBid}`;
+      setSnackbarMessage(bidErrorMessage);
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
       return;
     }
   
@@ -98,22 +109,40 @@ function ReviewPurchase() {
   
       if (data.successful) {
         console.log("🎉 Bid placed successfully!");
-        alert("Bid placed successfully!");
-        navigate("/bidding-page", {
-          state: {
-            listing,
-            bidAmount: newBidAmount,
-          },
-        });
+        //alert("Bid placed successfully!");
+        setSnackbarMessage('Bid placed successfully! Redirecting...');
+        setSnackbarSeverity('success');
+        setOpenSnackbar(true);
+        setTimeout(() => {
+          navigate("/bidding-page", {
+            state: {
+              listing,
+              bidAmount: newBidAmount,
+            },
+          });
+        }, 3000);
       } else {
         console.error("⚠️ API Error:", data.error);
-        setError(data.error || "Failed to place bid.");
+        //setError(data.error || "Failed to place bid.")
+        setSnackbarMessage(`Failed to place bid. Increment below minimum. Redirecting...`);
+        setSnackbarSeverity('error');
+        setOpenSnackbar(true);
+        setTimeout(() => {
+          navigate(-1);
+        }, 3000)
       }
     } catch (error) {
       console.error("❌ API Request Failed:", error);
-      setError("Failed to send bid. Please try again.");
+      //setError("Failed to send bid. Please try again.");
+      setSnackbarMessage(`Failed to send bid. Please try again.`);
+      setSnackbarSeverity('error');
+      setOpenSnackbar(true);
     }
   };
+
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
+};
 
   useEffect(() => {
     if (listingId) {
@@ -240,6 +269,20 @@ function ReviewPurchase() {
           </div>
         </div>
       </div>
+      <Snackbar
+          open={openSnackbar}
+          autoHideDuration={4000}  // Duration in ms before Snackbar auto closes
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          >
+          <MuiAlert
+              onClose={handleCloseSnackbar}
+              severity={snackbarSeverity}
+              sx={{ width: '100%', fontSize: '1.50rem' }}
+          >
+              {snackbarMessage}
+          </MuiAlert>
+      </Snackbar>
     </AppTheme>
   );
 }
