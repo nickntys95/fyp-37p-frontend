@@ -36,7 +36,7 @@ function ConfirmationPage() {
 
   const confirmPayment = async (orderId, payerId) => {
     try {
-      const response = await fetch(`https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/confirm_payment?token=${orderId}&payer_id=${payerId}`, {
+     const response = await fetch(`https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/confirm_payment/?token=${orderId}?payer_id=${payerId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
