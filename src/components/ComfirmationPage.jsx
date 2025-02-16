@@ -12,8 +12,8 @@ function ConfirmationPage() {
   const [paymentStatus, setPaymentStatus] = useState(null);
 
   //  Extract PayPal parameters
-  const orderId = searchParams.get("token");  //  PayPal Transaction Token
-  const payerId = searchParams.get("PayerID"); //  PayPal Payer ID
+  const orderId = searchParams.get("token"); // PayPal Transaction Token
+  const payerId = searchParams.get("PayerID"); // PayPal Payer ID
 
   //  Retrieve stored session values
   const bidAmount = sessionStorage.getItem("bidAmount") || "N/A";
@@ -36,18 +36,28 @@ function ConfirmationPage() {
 
   const confirmPayment = async (orderId, payerId) => {
     try {
-     const response = await fetch(`https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/confirm_payment?token=${orderId}&PayerID=${payerId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-        },
-      });
+      const response = await fetch(
+        `https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/confirm_payment/${orderId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          },
+        }
+      );
 
       const data = await response.json();
-      console.log(" API Response:", data);
+      console.log("✅ API Response:", data);
 
       setPaymentStatus(data.successful ? " Payment Successful 🎉" : `❌ Payment Failed: ${data.error}`);
+
+      // ✅ Automatically Redirect to Live Bidding Page if English Auction
+      if (data.successful && listing.auction_strategy?.toLowerCase() === "english") {
+        setTimeout(() => {
+          navigate("/bidding-page");
+        }, 2000); // 2-second delay before redirecting
+      }
     } catch (error) {
       console.error("❌ Error confirming payment:", error);
       setPaymentStatus("❌ An error occurred while confirming your payment.");
@@ -71,9 +81,17 @@ function ConfirmationPage() {
         <p><strong>Item:</strong> {listing.title || "No Item Title"}</p>
         <p><strong>Payment:</strong> ${bidAmount}</p>
         <p>{isProcessing ? "Processing payment..." : paymentStatus}</p>
-        <button onClick={() => navigate("/home")} className="btn btn-primary mt-3">
-          Return Home
-        </button>
+
+        {/* ✅ Show "Continue Bidding" for English Auction, otherwise "Return Home" */}
+        {listing.auction_strategy?.toLowerCase() === "english" ? (
+          <button onClick={() => navigate("/bidding-page")} className="btn btn-success mt-3">
+            Continue Bidding
+          </button>
+        ) : (
+          <button onClick={() => navigate("/home")} className="btn btn-primary mt-3">
+            Return Home
+          </button>
+        )}
       </Box>
     </AppTheme>
   );
