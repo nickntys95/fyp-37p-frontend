@@ -118,6 +118,39 @@ function SellerMonitorBids() {
   };
 
   useEffect(() => {
+    let isMounted = true;
+    let isFetching = false;
+  
+    const fetchData = async () => {
+      if (isFetching) return; // If already fetching, skip this execution
+      isFetching = true;
+  
+      console.log("Fetching data...");
+      try {
+        await fetchInitialBids();
+        console.log("Data fetch complete.");
+      } finally {
+        isFetching = false; // Reset the flag after completion
+        if (isMounted) {
+          setTimeout(fetchDataWrapper, 0);
+        }
+      }
+    };
+  
+    const fetchDataWrapper = () => {
+      if (isMounted) {
+        fetchData();
+      }
+    };
+  
+    fetchDataWrapper(); // Initial execution
+  
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!endAt) return;
 
     const calculateTimeLeft = () => {
@@ -285,7 +318,7 @@ function SellerMonitorBids() {
         },
       },
     });
-  }, [bids]);
+  }, [JSON.stringify(bids)]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString); // Convert string to Date object
