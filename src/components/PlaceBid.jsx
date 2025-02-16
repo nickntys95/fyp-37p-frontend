@@ -351,25 +351,17 @@ function PlaceBid() {
                 style={inputStyle}
               />
             </div>
-            <div>
-              <label style={labelStyle}>Enter Your Bid</label>
+           <div>
+             <label style={labelStyle}>Enter Your Bid</label>
               <input
-                type="number"
-                value={
-                  listing.auction_strategy.toLowerCase() === "dutch"
-                    ? currentPrice.toFixed(2)
-                    : bidAmount
-                }
-                onChange={handleBidChange}
-                placeholder={`Enter an amount`}
-                style={inputStyle}
-              />
-              {errorMessage && (
-                <p style={{ color: "#ff4d4d", marginTop: "10px" }}>
-                  {errorMessage}
-                </p>
-              )}
-            </div>
+                     type="number"
+                     value={listing.auction_strategy.toLowerCase() === "dutch" ? currentPrice.toFixed(2) : bidAmount}
+                     onChange={handleBidChange}
+                     placeholder={`Enter an amount`}
+                     style={inputStyle}
+                    />
+            {errorMessage && <p style={{ color: "#ff4d4d", marginTop: "10px" }}>{errorMessage}</p>}
+                </div>
           </div>
 
           {/* Buttons */}
