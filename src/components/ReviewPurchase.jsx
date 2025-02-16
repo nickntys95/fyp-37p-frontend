@@ -117,9 +117,16 @@ function ReviewPurchase() {
         console.log("✅ API Response:", data);
 
         if (data.successful) {
-          console.log("🎉 Bid placed successfully!");
+          console.log(" Bid placed successfully!");
           alert("Bid placed successfully!");
-          navigate("/home"); // Redirect to home page});
+          sessionStorage.setItem("listing", JSON.stringify(listing));
+          // ✅ Navigate to BiddingPage with all necessary details
+          navigate("/bidding-page", {
+          state: {
+         listing, // ✅ Ensure the listing object is passed
+          bidAmount: newBidAmount,
+            },
+         });
         } else {
           console.error("⚠️ API Error:", data.error);
           setError(data.error || "Failed to place bid.");
