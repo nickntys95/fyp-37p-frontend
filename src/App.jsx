@@ -34,6 +34,7 @@ import SupportUser from './components/supportuser';
 import Wishlist from './components/Wishlist';
 import AdminEdit from './components/adminedit';
 import SellerMonitorBids from './components/SellerMonitorBids';
+import ComfirmationPage from './components/ComfirmationPage';
 
 export const scroll = new SmoothScroll('a[href*="#"]', {
   speed: 1000,
@@ -137,6 +138,7 @@ function App() {
           <Route path="/Wishlist" element={<Wishlist />} />
           <Route path="AdminEdit/:itemId" element={<AdminEdit />} />
           <Route path="/SellerMonitorBids/:itemId" element={<SellerMonitorBids />} />
+	  <Route path="/payment_success" element={<ComfirmationPage />} />
           <Route 
             path="/adminhome" 
             element={
