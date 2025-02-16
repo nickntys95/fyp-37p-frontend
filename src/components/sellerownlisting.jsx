@@ -93,17 +93,17 @@ export default function SellerOwnListing() {
   const now = new Date();
   now.setHours(now.getHours() + 8);
   //console.log("Current Time (SGT):", now.toLocaleString('en-GB', { timeZone: 'Asia/Singapore' }));
-  const UpcomingList = listings.filter((item) => {
+  const UpcomingList = listings?.filter((item) => {
     const startDate = new Date(item.start_at);
     //console.log("Start Date:", startDate, "Now:", now); // Debugging line
     return startDate > now;
   });
-  const CurrentList = listings.filter((item) => {
+  const CurrentList = listings?.filter((item) => {
     const startDate = new Date(item.start_at);
     const endDate = new Date(item.end_at);
     return startDate <= now && endDate > now;
   });
-  const PastList = listings.filter((item) => new Date(item.end_at) < now);
+  const PastList = listings?.filter((item) => new Date(item.end_at) < now);
 
   const getDisplayedList = () => {
     if (selectedTab === "upcoming")
@@ -282,7 +282,7 @@ function Section({ title, list, type, navigate, setListings, listings }) {
       // Notify the user and update the listings
       setOpenSnackbar(true);
       setListings((prevListings) =>
-        prevListings.filter((item) => item.id !== listingId)
+        prevListings?.filter((item) => item.id !== listingId)
       );
     } catch (error) {
       console.error("Error deleting image or listing:", error);
