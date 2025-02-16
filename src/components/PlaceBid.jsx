@@ -90,7 +90,10 @@ function PlaceBid() {
     if (listing.start_at) {
       const startTime = new Date(listing.start_at).getTime();
       const currentTime = new Date().getTime();
-      setIsBidStarted(currentTime >= startTime);
+      const adjustedCurrentTime = currentTime + (8 * 60 * 60 * 1000);
+      console.log("adjustedCurrentTime:", adjustedCurrentTime);
+      console.log("startTime:", startTime);
+      setIsBidStarted(adjustedCurrentTime >= startTime);
     }
   }, [listing.start_at]);
   // Initialize the current price for Dutch auction
