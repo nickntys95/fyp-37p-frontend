@@ -157,7 +157,7 @@ function PlaceBid() {
     const minimumIncrement = parseFloat(listing.minimum_increment) || 10; // Default to 10 if not provided
 
     // Validate the bid based on the auction strategy
-    if (listing.auction_strategy === "english") {
+    if (listing.auction_strategy === "English") {
       if (isNaN(bid) || bid < currentBid + minimumIncrement) {
         setErrorMessage(
           `Your bid must be at least $${(currentBid + minimumIncrement).toFixed(
@@ -181,7 +181,7 @@ function PlaceBid() {
         setErrorMessage("");
         setIsBidValid(true);
       }
-    } else if (listing.auction_strategy === "sealed-bid") {
+    } else if (listing.auction_strategy === "Sealed-Bid") {
       if (isNaN(bid) || bid < listing.minimum_bid) {
         setErrorMessage(
           `Your bid must be at least $${listing.minimum_bid.toFixed(2)}.`
