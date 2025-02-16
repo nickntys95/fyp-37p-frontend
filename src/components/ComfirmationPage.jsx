@@ -11,6 +11,9 @@ function ConfirmationPage() {
   const [isProcessing, setIsProcessing] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState(null);
 
+  // ✅ Detect if user is from CheckoutPage (retrieved from sessionStorage)
+  const fromCheckout = sessionStorage.getItem("fromCheckout") === "true";
+
   //  Extract PayPal parameters
   const orderId = searchParams.get("token"); // PayPal Transaction Token
   const payerId = searchParams.get("PayerID"); // PayPal Payer ID
@@ -25,6 +28,7 @@ function ConfirmationPage() {
     console.log(" Extracted Payer ID:", payerId);
     console.log(" Stored Listing:", listing);
     console.log(" Bid Amount:", bidAmount);
+    console.log(" From Checkout:", fromCheckout);
 
     if (orderId && payerId) {
       confirmPayment(orderId, payerId);
@@ -52,8 +56,8 @@ function ConfirmationPage() {
 
       setPaymentStatus(data.successful ? " Payment Successful 🎉" : `❌ Payment Failed: ${data.error}`);
 
-      // ✅ Automatically Redirect to Live Bidding Page if English Auction
-      if (data.successful && listing.auction_strategy?.toLowerCase() === "english") {
+      // ✅ Automatically Redirect to Live Bidding Page if English Auction & NOT from Checkout
+      if (data.successful && listing.auction_strategy?.toLowerCase() === "english" && !fromCheckout) {
         setTimeout(() => {
           navigate("/bidding-page");
         }, 2000); // 2-second delay before redirecting
@@ -63,6 +67,9 @@ function ConfirmationPage() {
       setPaymentStatus("❌ An error occurred while confirming your payment.");
     } finally {
       setIsProcessing(false);
+
+      // ✅ Clear 'fromCheckout' flag after successful processing
+      sessionStorage.removeItem("fromCheckout");
     }
   };
 
@@ -82,8 +89,12 @@ function ConfirmationPage() {
         <p><strong>Payment:</strong> ${bidAmount}</p>
         <p>{isProcessing ? "Processing payment..." : paymentStatus}</p>
 
-        {/* ✅ Show "Continue Bidding" for English Auction, otherwise "Return Home" */}
-        {listing.auction_strategy?.toLowerCase() === "english" ? (
+        {/* ✅ Show "Return Home" if user came from Checkout, otherwise normal behavior */}
+        {fromCheckout ? (
+          <button onClick={() => navigate("/home")} className="btn btn-primary mt-3">
+            Return Home
+          </button>
+        ) : listing.auction_strategy?.toLowerCase() === "english" ? (
           <button onClick={() => navigate("/bidding-page")} className="btn btn-success mt-3">
             Continue Bidding
           </button>
