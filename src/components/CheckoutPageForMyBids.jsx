@@ -1,37 +1,128 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import AppAppBar from "./appbar";
 import AppTheme from "../shared-theme/AppTheme";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
 
-function CheckoutPageForMyBids() {
+function CheckoutPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const {
+    id: listing_id,
+    title,
+    description,
+    buy_now,
+    image_urls,
+  } = location.state || {};
 
-  // Ensure safe extraction of state data
-  const locationState = location.state || {};
-  const productName = locationState.productName || "Auction Item";
-  const price = locationState.price || "0.00";
-
-  const [paymentMethod, setPaymentMethod] = useState("credit");
+  const [paymentMethod, setPaymentMethod] = useState("paypal");
   const [promoCode, setPromoCode] = useState("");
   const [discountApplied, setDiscountApplied] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [orderId, setOrderId] = useState(null);
+  const token = sessionStorage.getItem("token");
 
-  const handlePromoCodeSubmit = (event) => {
-    event.preventDefault();
-    if (promoCode.toUpperCase() === "WINNER5") {
-      setDiscountApplied(true);
-    } else {
-      alert("Invalid Promo Code");
+  // ✅ Extract order ID from PayPal redirect URL
+  useEffect(() => {
+    const order_id = searchParams.get("token");
+    if (order_id) {
+      setOrderId(order_id);
+      confirmPayment(order_id);
+    }
+  }, [searchParams]);
+
+  // ✅ Confirm Payment Step (Capture PayPal Payment)
+  const confirmPayment = async (order_id) => {
+    setIsProcessing(true);
+
+    try {
+      const response = await fetch(`https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/confirm_payment/${order_id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      console.log("✅ Payment Confirmation Response:", data);
+
+      if (data.successful) {
+        alert("🎉 Payment confirmed successfully!");
+        navigate("/success");
+      } else {
+        alert(`❌ Payment confirmation failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error("❌ Error confirming payment:", error);
+      alert("An error occurred while confirming your payment.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const totalPrice = discountApplied ? (parseFloat(price) - 5).toFixed(2) : parseFloat(price).toFixed(2);
-
-  const handlePaymentMethodChange = (method) => {
-    setPaymentMethod(method);
+  // ✅ Initialize Payment & Redirect to PayPal
+  const handlePaymentMethodChange = async () => {
+    if (paymentMethod !== "paypal") {
+      alert("Currently, only PayPal is supported.");
+      return;
+    }
+  
+    setIsProcessing(true);
+  
+    try {
+      if (!listing_id) {
+        throw new Error("❌ Listing ID is missing. Unable to process payment.");
+      }
+  
+      const requestBody = {
+        amount: buy_now.toString(),
+        listing_id,
+      };
+  
+      console.log("📌 Sending Payment Request:", requestBody);
+  
+      const response = await fetch("https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/init_payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+  
+      const data = await response.json();
+      console.log("📌 Full PayPal API Response:", JSON.stringify(data, null, 2));
+  
+      if (data.successful && data.order && Array.isArray(data.order.links)) {
+        console.log("📌 Available PayPal Links:", data.order.links);
+  
+        // ✅ Extract the correct PayPal approval link
+        const approvalLink = data.order.links.find(link => link.rel === "payer-action");
+  
+        if (approvalLink && approvalLink.href) {
+          console.log("✅ Redirecting to PayPal:", approvalLink.href);
+          
+          // ✅ Store 'fromCheckout' flag in sessionStorage
+          sessionStorage.setItem("fromCheckout", "true");
+  
+          window.location.href = approvalLink.href;
+        } else {
+          throw new Error("❌ No approval link found in PayPal response.");
+        }
+      } else {
+        alert(`❌ Payment failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error("❌ Error processing payment:", error);
+      alert("An error occurred while processing your payment.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
+  
 
   return (
     <div className="checkout-page">
@@ -42,62 +133,39 @@ function CheckoutPageForMyBids() {
 
           <div className="container py-5" style={{ paddingTop: "100px" }}>
             <div className="py-5 text-center">
-              <h2>Checkout - My Bids</h2>
-              <p className="text-muted">Complete your purchase for the auction item.</p>
+              <h2>Checkout</h2>
             </div>
-
             <div className="row">
-              {/* Order Summary */}
+              {/* Product Details */}
               <div className="col-md-4 order-md-2 mb-4">
                 <h4 className="d-flex justify-content-between align-items-center mb-3">
                   <span className="text-muted">Your Item</span>
                   <span className="badge badge-secondary badge-pill">1</span>
                 </h4>
                 <ul className="list-group mb-3 sticky-top">
-                  <li className="list-group-item d-flex justify-content-between lh-condensed" style={{ color: "#000" }}>
-                    <div>
-                      <h6 className="my-0">{productName}</h6>
-                      <h6 className="my-0">Auction Winning</h6>
-                    </div>
+                  <li className="list-group-item text-center">
+                    <img
+                      src={image_urls && image_urls.length > 0 ? image_urls[0] : "/placeholder.jpg"}
+                      alt={title || "Product Image"}
+                      style={{
+                        width: "100%",
+                        maxHeight: "300px",
+                        objectFit: "cover",
+                        borderRadius: "8px",
+                      }}
+                    />
                   </li>
-
-                  {/* Apply discount if promo code is valid */}
-                  {discountApplied && (
-                    <li className="list-group-item d-flex justify-content-between bg-light">
-                      <div className="text-success">
-                        <h6 className="my-0">Promo code</h6>
-                        <small>WINNER5</small>
-                      </div>
-                      <span className="text-success">-$5</span>
-                    </li>
-                  )}
-
-                  <li className="list-group-item d-flex justify-content-between">
-                    <h4>Total</h4>
-                    <h4>${totalPrice}</h4>
+                  <li className="list-group-item d-flex justify-content-between lh-condensed">
+                    <div>
+                      <h6 className="my-0">{title}</h6>
+                      <small className="text-muted">{description}</small>
+                    </div>
+                    <span className="text-muted">${buy_now}</span>
                   </li>
                 </ul>
-
-                {/* Promo Code Input */}
-                <form className="card p-2" onSubmit={handlePromoCodeSubmit}>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Promo code"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                    />
-                    <div className="input-group-append">
-                      <button type="submit" className="btn btn-secondary">
-                        Redeem
-                      </button>
-                    </div>
-                  </div>
-                </form>
               </div>
 
-              {/* Billing & Payment */}
+              {/* Billing Address & Payment Options */}
               <div className="col-md-8 order-md-1">
                 <h4 className="mb-3">Billing address</h4>
                 <form className="needs-validation" noValidate>
@@ -115,116 +183,49 @@ function CheckoutPageForMyBids() {
                   </div>
 
                   <div className="mb-3">
-                    <label htmlFor="email">Email (Optional)</label>
+                    <label htmlFor="email">Email</label>
                     <input type="email" className="form-control" id="email" />
-                    <div className="invalid-feedback">Please enter a valid email address for shipping updates.</div>
+                    <div className="invalid-feedback">Please enter a valid email address.</div>
                   </div>
 
                   <div className="mb-3">
-                    <label htmlFor="address">Shipping Address</label>
+                    <label htmlFor="address">Address</label>
                     <input type="text" className="form-control" id="address" required />
                     <div className="invalid-feedback">Please enter your shipping address.</div>
                   </div>
 
                   <hr className="mb-4" />
 
+                  {/* Payment Options */}
                   <h4 className="mb-3">Payment</h4>
-                  <div className="d-block my-3">
-                    <div className="custom-control custom-radio">
-                      <input
-                        id="credit"
-                        name="paymentMethod"
-                        type="radio"
-                        className="custom-control-input"
-                        checked={paymentMethod === "credit"}
-                        onChange={() => handlePaymentMethodChange("credit")}
-                      />
-                      <label className="custom-control-label" htmlFor="credit">
-                        Credit card
-                      </label>
-                    </div>
-                    <div className="custom-control custom-radio">
-                      <input
-                        id="paypal"
-                        name="paymentMethod"
-                        type="radio"
-                        className="custom-control-input"
-                        checked={paymentMethod === "paypal"}
-                        onChange={() => handlePaymentMethodChange("paypal")}
-                      />
-                      <label className="custom-control-label" htmlFor="paypal">
-                        PayPal
-                      </label>
-                    </div>
+                  <div className="custom-control custom-radio">
+                    <input
+                      id="paypal"
+                      name="paymentMethod"
+                      type="radio"
+                      className="custom-control-input"
+                      checked={paymentMethod === "paypal"}
+                      onChange={() => setPaymentMethod("paypal")}
+                    />
+                    <label className="custom-control-label" htmlFor="paypal">
+                      PayPal
+                    </label>
                   </div>
 
-                  {/* Conditional Rendering for PayPal */}
+                  {/* PayPal Redirection Message */}
                   {paymentMethod === "paypal" && (
                     <div className="mt-3">
-                      <p className="text-muted">You will be redirected to PayPal to complete your payment.</p>
+                      <p className="text-muted">
+                        You will be redirected to PayPal to complete your payment.
+                      </p>
                     </div>
                   )}
 
-                   {/* Conditional Rendering for Credit Card */}
-               {paymentMethod === "credit" && (
-                <div>
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label htmlFor="cc-name">Name on card</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="cc-name"
-                        required
-                      />
-                      <small className="text-muted">Full name as displayed on card</small>
-                      <div className="invalid-feedback">Name on card is required</div>
-                    </div>
-                    <div className="col-md-6 mb-3">
-                      <label htmlFor="cc-number">Credit card number</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="cc-number"
-                        required
-                      />
-                      <div className="invalid-feedback">Credit card number is required</div>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-md-3 mb-3">
-                      <label htmlFor="cc-expiration">Expiration</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="cc-expiration"
-                        required
-                      />
-                      <div className="invalid-feedback">Expiration date required</div>
-                    </div>
-                    <div className="col-md-3 mb-3">
-                      <label htmlFor="cc-cvv">CVV</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="cc-cvv"
-                        required
-                      />
-                      <div className="invalid-feedback">Security code required</div>
-                    </div>
-                  </div>
-                </div>
-                )}
-
                   <hr className="mb-4" />
-                  <div className="d-flex justify-content-between">
-                    <button className="btn btn-secondary btn-lg" style={{ marginRight: "10px", flex: 1 }} onClick={() => navigate("/my-bids")}>
-                      Cancel
-                    </button>
-                    <button className="btn btn-primary btn-lg" style={{ flex: 2 }} type="submit">
-                      Complete Checkout
-                    </button>
-                  </div>
+
+                  <button className="btn btn-primary btn-lg" type="button" onClick={handlePaymentMethodChange} disabled={isProcessing}>
+                    {isProcessing ? "Processing..." : "Continue to Checkout"}
+                  </button>
                 </form>
               </div>
             </div>
@@ -235,4 +236,4 @@ function CheckoutPageForMyBids() {
   );
 }
 
-export default CheckoutPageForMyBids;
+export default CheckoutPage;
