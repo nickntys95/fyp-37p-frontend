@@ -4,6 +4,8 @@ import AppAppBar from "./appbar";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 
 function ConfirmationPage() {
   const navigate = useNavigate();
@@ -11,17 +13,18 @@ function ConfirmationPage() {
   const [isProcessing, setIsProcessing] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState(null);
 
-  // ✅ Detect if user is from CheckoutPage (retrieved from sessionStorage)
+  // ✅ Retrieve data from sessionStorage
   const fromCheckout = sessionStorage.getItem("fromCheckout") === "true";
-
-  //  Extract PayPal parameters
-  const orderId = searchParams.get("token"); // PayPal Transaction Token
-  const payerId = searchParams.get("PayerID"); // PayPal Payer ID
-
-  //  Retrieve stored session values
+  const orderId = searchParams.get("token");
+  const payerId = searchParams.get("PayerID");
   const bidAmount = sessionStorage.getItem("bidAmount") || "N/A";
   const storedListing = sessionStorage.getItem("listing");
   const listing = storedListing ? JSON.parse(storedListing) : {};
+
+  // ✅ Snackbar State for Notifications
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("info");
 
   useEffect(() => {
     console.log(" Extracted Order ID:", orderId);
@@ -29,11 +32,12 @@ function ConfirmationPage() {
     console.log(" Stored Listing:", listing);
     console.log(" Bid Amount:", bidAmount);
     console.log(" From Checkout:", fromCheckout);
+    console.log(" Extracted Auction Strategy:", listing?.auction_strategy || "Not Found");
 
     if (orderId && payerId) {
       confirmPayment(orderId, payerId);
     } else {
-      setPaymentStatus(" Invalid payment details.");
+      setPaymentStatus("❌ Invalid payment details.");
       setIsProcessing(false);
     }
   }, [orderId, payerId]);
@@ -54,33 +58,42 @@ function ConfirmationPage() {
       const data = await response.json();
       console.log("✅ API Response:", data);
 
-      setPaymentStatus(data.successful ? " Payment Successful " : ` Payment Failed: ${data.error}`);
-
-      //  Automatically Redirect Based on Auction Type
-    if (data.successful) {
-      if (listing.auction_strategy?.toLowerCase() === "english" ) {
-        setTimeout(() => {
-          navigate("/bidding-page");
-        }, 10000); // 10-second delay before redirecting
-      } else if (listing.auction_strategy?.toLowerCase() === "sealed-bid") {
-        console.log(" Sealed-bid auction detected. No real-time bidding needed.");
-        // Stay on the confirmation page and only allow returning home
-      } else if (listing.auction_strategy?.toLowerCase() === "dutch") {
-        console.log(" Dutch auction detected. Redirecting to listing page...");
-        setTimeout(() => {
-          navigate("/home");
-        }, 10000); // Redirect home after 10 seconds
+      if (data.successful) {
+        setPaymentStatus("✅ Payment Successful");
+        setSnackbarSeverity("success");
+        setSnackbarMessage("✅ Payment confirmed successfully!");
       } else {
-        console.log(" Unknown auction type. Defaulting to Home.");
-        setTimeout(() => {
-          navigate("/home");
-        }, 2000);
+        setPaymentStatus(`❌ Payment Failed: ${data.error}`);
+        setSnackbarSeverity("error");
+        setSnackbarMessage(`❌ Payment Failed: ${data.error}`);
       }
-    }
-  } catch (error) {
-    console.error(" Error confirming payment:", error);
-    setPaymentStatus(" An error occurred while confirming your payment.");
+      setOpenSnackbar(true);
 
+      // ✅ Automatically Redirect Based on Auction Type
+      if (data.successful) {
+        setTimeout(() => {
+          if (listing.auction_strategy === "english") {
+            navigate("/bidding-page");
+          } else if (listing.auction_strategy === "sealed-bid") {
+            console.log("✅ Sealed-bid auction detected. No real-time bidding needed.");
+          } else if (listing.auction_strategy === "dutch") {
+            console.log("✅ Dutch auction detected. Redirecting to listing page...");
+            navigate("/home");
+          } else {
+            console.log("✅ Unknown auction type. Defaulting to Home.");
+            navigate("/home");
+          }
+        }, 10000); // 5-second delay before redirecting
+      }
+    } catch (error) {
+      console.error("❌ Error confirming payment:", error);
+      setPaymentStatus("❌ An error occurred while confirming your payment.");
+      setSnackbarSeverity("error");
+      setSnackbarMessage("❌ An error occurred while confirming payment.");
+      setOpenSnackbar(true);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -108,8 +121,24 @@ function ConfirmationPage() {
           Return Home
         </button>
       </Box>
+
+      {/* ✅ Snackbar Notification */}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={4000} // Duration in ms before Snackbar auto closes
+        onClose={() => setOpenSnackbar(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <MuiAlert
+          onClose={() => setOpenSnackbar(false)}
+          severity={snackbarSeverity}
+          sx={{ width: "100%", fontSize: "1.2rem" }}
+        >
+          {snackbarMessage}
+        </MuiAlert>
+      </Snackbar>
     </AppTheme>
   );
- }
 }
+
 export default ConfirmationPage;
