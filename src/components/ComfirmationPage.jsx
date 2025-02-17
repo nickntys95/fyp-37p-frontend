@@ -33,7 +33,7 @@ function ConfirmationPage() {
     if (orderId && payerId) {
       confirmPayment(orderId, payerId);
     } else {
-      setPaymentStatus("❌ Invalid payment details.");
+      setPaymentStatus(" Invalid payment details.");
       setIsProcessing(false);
     }
   }, [orderId, payerId]);
@@ -54,23 +54,33 @@ function ConfirmationPage() {
       const data = await response.json();
       console.log("✅ API Response:", data);
 
-      setPaymentStatus(data.successful ? " Payment Successful 🎉" : `❌ Payment Failed: ${data.error}`);
+      setPaymentStatus(data.successful ? " Payment Successful " : ` Payment Failed: ${data.error}`);
 
-      // ✅ Automatically Redirect to Live Bidding Page if English Auction & NOT from Checkout
-      if (data.successful && listing.auction_strategy?.toLowerCase() === "english" && !fromCheckout) {
+      //  Automatically Redirect Based on Auction Type
+    if (data.successful) {
+      if (listing.auction_strategy?.toLowerCase() === "english" ) {
         setTimeout(() => {
           navigate("/bidding-page");
         }, 2000); // 2-second delay before redirecting
+      } else if (listing.auction_strategy?.toLowerCase() === "sealed-bid") {
+        console.log(" Sealed-bid auction detected. No real-time bidding needed.");
+        // Stay on the confirmation page and only allow returning home
+      } else if (listing.auction_strategy?.toLowerCase() === "dutch") {
+        console.log(" Dutch auction detected. Redirecting to listing page...");
+        setTimeout(() => {
+          navigate("/home");
+        }, 2000); // Redirect home after 2 seconds
+      } else {
+        console.log(" Unknown auction type. Defaulting to Home.");
+        setTimeout(() => {
+          navigate("/home");
+        }, 2000);
       }
-    } catch (error) {
-      console.error("❌ Error confirming payment:", error);
-      setPaymentStatus("❌ An error occurred while confirming your payment.");
-    } finally {
-      setIsProcessing(false);
-
-      // ✅ Clear 'fromCheckout' flag after successful processing
-      sessionStorage.removeItem("fromCheckout");
     }
+  } catch (error) {
+    console.error(" Error confirming payment:", error);
+    setPaymentStatus(" An error occurred while confirming your payment.");
+
   };
 
   return (
@@ -90,22 +100,16 @@ function ConfirmationPage() {
         <p>{isProcessing ? "Processing payment..." : paymentStatus}</p>
 
         {/* ✅ Show "Return Home" if user came from Checkout, otherwise normal behavior */}
-        {fromCheckout ? (
-          <button onClick={() => navigate("/home")} className="btn btn-primary mt-3">
-            Return Home
-          </button>
-        ) : listing.auction_strategy?.toLowerCase() === "english" ? (
-          <button onClick={() => navigate("/bidding-page")} className="btn btn-success mt-3">
-            Continue Bidding
-          </button>
-        ) : (
-          <button onClick={() => navigate("/home")} className="btn btn-primary mt-3">
-            Return Home
-          </button>
-        )}
+        <button
+          onClick={() => navigate("/home")}
+          className="btn btn-primary mt-3"
+          disabled={isProcessing} // Prevents clicking while loading
+        >
+          Return Home
+        </button>
       </Box>
     </AppTheme>
   );
+ }
 }
-
 export default ConfirmationPage;
