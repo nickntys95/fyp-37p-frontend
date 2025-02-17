@@ -4,42 +4,46 @@ import AppAppBar from "./appbar";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 
 function ReviewPurchase() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isProcessing, setIsProcessing] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
   // Extract bidAmount and listing from location.state or fallback to sessionStorage
-  const bidAmount =
-    location.state?.bidAmount || sessionStorage.getItem("bidAmount");
-  const listing =
-    location.state?.listing || JSON.parse(sessionStorage.getItem("listing"));
+  const bidAmount = location.state?.bidAmount || sessionStorage.getItem("bidAmount");
+  const listing = location.state?.listing || JSON.parse(sessionStorage.getItem("listing"));
   //console.log("Stored listing:", storedListing);
   // Log bidAmount and listing for debugging
   console.log("ReviewPurchase Debugging - bidAmount:", bidAmount);
-
+  
   //console.log("ReviewPurchase Debugging - listing:", listing);
   const [newBidAmount, setNewBidAmount] = useState(bidAmount);
   const [error, setError] = useState(null);
   const [currentBid, setCurrentBid] = useState(0); // Store the current highest bid
 
   const token = sessionStorage.getItem("token"); // Retrieve token
-  const listingId = listing?.id; // Extract listing
+  const listingId = listing?.id; // Extract listing 
   console.log("ReviewPurchase Debugging - listing ID:", listingId);
+  //snackbar 
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error'
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
+};
   // Fetch the current highest bid from the API
   const fetchInitialBids = async () => {
     try {
-      const response = await fetch(
-        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ listing_id: listingId }),
-        }
-      );
+      const response = await fetch("https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ listing_id: listingId }),
+      });
 
       const data = await response.json();
 
@@ -57,204 +61,136 @@ function ReviewPurchase() {
     }
   };
 
-  const handleEditBid = () => {
-    if (!listing) {
-      console.error("Listing data is undefined or null!");
-      return;
-    }
-
-    console.log("Navigating to /place-bid with listing:", listing);
-    navigate("/place-bid", {
-      state: {
-        listing, // Pass the listing object directly
-      },
-    });
-  };
-
+  
+  
   const handleSubmitBid = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // ✅ Prevent default form submission
     console.log("🚀 Form submission started!");
-
-    console.log("📝 New bid amount:", newBidAmount);
-    console.log("📌 Listing ID:", listingId);
-
+  
     if (!newBidAmount || parseFloat(newBidAmount) <= 0) {
-      console.warn("❌ Invalid bid amount.");
-      alert("Please enter a valid bid amount.");
+      setSnackbarSeverity("error");
+      setSnackbarMessage("❌ Please enter a valid bid amount.");
+      setOpenSnackbar(true);
       return;
     }
-
+  
     const auctionStrategy = listing.auction_strategy.toLowerCase();
     console.log(`🔎 Auction strategy: ${auctionStrategy}`);
-
-    if (auctionStrategy === "english") {
-      if (parseFloat(newBidAmount) <= currentBid) {
-        console.warn(`❌ Your bid must be greater than $${currentBid}`);
-        alert(
-          `Your bid must be greater than the current highest bid $${currentBid}`
-        );
+  
+    try {
+      let bidApiUrl = "";
+      if (auctionStrategy === "english") {
+        if (parseFloat(newBidAmount) <= currentBid) {
+          setSnackbarSeverity("error");
+          setSnackbarMessage(`❌ Your bid must be greater than the current highest bid $${currentBid}`);
+          setOpenSnackbar(true);
+          return;
+        }
+        console.log("🔗 Sending English bid...");
+        bidApiUrl = "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make";
+      } else if (auctionStrategy === "Dutch") {
+        console.log("🔗 Sending Dutch bid...");
+        bidApiUrl = "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make_dutch_bid";
+      } else if (auctionStrategy === "Sealed-Bid") {
+        console.log("🔗 Sending Sealed bid...");
+        bidApiUrl = "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make_sealed_bid";
+      } else {
+        setSnackbarSeverity("error");
+        setSnackbarMessage("❌ Invalid auction strategy.");
+        setOpenSnackbar(true);
         return;
       }
-
-      console.log("🔗 Sending English bid...");
-      try {
-        const response = await fetch(
-          "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              listing_id: listingId,
-              amount: newBidAmount,
-            }),
-          }
-        );
-
-        const data = await response.json();
-        console.log("✅ API Response:", data);
-
-        if (data.successful) {
-          console.log(" Bid placed successfully!");
-          alert("Bid placed successfully!");
-          sessionStorage.setItem("listing", JSON.stringify(listing));
-          // ✅ Navigate to BiddingPage with all necessary details
-          navigate("/bidding-page", {
-          state: {
-         listing, // ✅ Ensure the listing object is passed
-          bidAmount: newBidAmount,
-            },
-         });
-        } else {
-          console.error("⚠️ API Error:", data.error);
-          setError(data.error || "Failed to place bid.");
-        }
-      } catch (error) {
-        console.error("❌ API Request Failed:", error);
-        setError("Failed to send bid. Please try again.");
-      }
-    } else if (auctionStrategy === "dutch") {
-      try {
-        const response = await fetch(
-          "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make_dutch_bid",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              listing_id: listingId,
-              amount: parseFloat(newBidAmount).toFixed(2), // Use the current auction price
-            }),
-          }
-        );
-
-        const data = await response.json();
-        console.log("✅ API Response:", data);
-
-        if (data.successful) {
-          console.log("🎉 Dutch bid placed successfully!");
-          alert(`Dutch bid placed successfully at $${newBidAmount}!`);
-          navigate("/bidding-page", {
-            state: { listing, bidAmount: newBidAmount },
-          });
-        } else {
-          console.error("⚠️ API Error:", data.error);
-          setError(data.error || "Failed to place Dutch bid.");
-        }
-      } catch (error) {
-        console.error("❌ API Request Failed:", error);
-        setError("Failed to send bid. Please try again.");
-      }
-    } else if (auctionStrategy === "sealed-bid") {
-      console.log("🔗 Sending Sealed bid...");
-      try {
-        const response = await fetch(
-          "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make_sealed_bid",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              listing_id: listingId,
-              amount: parseFloat(newBidAmount).toFixed(2),
-            }),
-          }
-        );
-
-        const data = await response.json();
-        console.log("✅ API Response:", data);
-
-        if (data.successful) {
-          console.log("🎉 Sealed bid placed successfully!");
-          alert("Sealed bid placed successfully!");
-          navigate("/home", { state: { listing, bidAmount: newBidAmount } });
-        } else {
-          console.error("⚠️ API Error:", data.error);
-          setError(data.error || "Failed to place bid.");
-        }
-      } catch (error) {
-        console.error("❌ API Request Failed:", error);
-        setError("Failed to send bid. Please try again.");
-      }
-    } else {
-      console.error("❌ Unsupported auction strategy:", auctionStrategy);
-      setError("Invalid auction strategy.");
-    }
-  };
-
-  const handleConfirmBid = async () => {
-    setIsProcessing(true);
-
-    try {
-      console.log("🚀 Initiating PayPal Payment...");
-
-      const requestBody = {
-        amount: bidAmount, // ✅ The bid amount
-        listing_id: listing.id, // ✅ The auction listing ID
-      };
-
-      const response = await fetch(
-        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/init_payment",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
-
+  
+      const response = await fetch(bidApiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          listing_id: listingId,
+          amount: parseFloat(newBidAmount).toFixed(2),
+        }),
+      });
+  
       const data = await response.json();
-      console.log("✅ PayPal Response:", data);
-
-      if (data.successful && data.order && Array.isArray(data.order.links)) {
-        const approvalLink = data.order.links.find(
-          (link) => link.rel === "payer-action"
-        );
-
-        if (approvalLink && approvalLink.href) {
-          console.log(`🔗 Redirecting to PayPal: ${approvalLink.href}`);
-          window.location.href = approvalLink.href; // ✅ Redirect user to PayPal
-        } else {
-          throw new Error("❌ No approval link found in PayPal response.");
-        }
+      console.log("✅ API Response:", data);
+  
+      if (data.successful) {
+        setSnackbarSeverity("success");
+        setSnackbarMessage("🎉 Bid placed successfully! Redirecting to payment...");
+        setOpenSnackbar(true);
+  
+        sessionStorage.setItem("listing", JSON.stringify(listing));
+        sessionStorage.setItem("bidAmount", newBidAmount);
+  
+        // Call PayPal redirection only after a successful bid
+        handleConfirmBid();
       } else {
-        alert(`❌ Payment failed: ${data.error}`);
+        setSnackbarSeverity("error");
+        setSnackbarMessage(data.error || "❌ Failed to place bid.");
+        setOpenSnackbar(true);
       }
     } catch (error) {
-      console.error("❌ Error processing payment:", error);
-      alert("An error occurred while processing your payment.");
-    } finally {
-      setIsProcessing(false);
+      setSnackbarSeverity("error");
+      setSnackbarMessage("❌ Failed to send bid. Please try again.");
+      setOpenSnackbar(true);
     }
   };
+  
+
+const handleConfirmBid = async () => {
+  setIsProcessing(true);
+
+  try {
+    console.log("🚀 Initiating PayPal Payment...");
+    
+    const requestBody = {
+      amount: bidAmount, //  The bid amount
+      listing_id: listing.id, //  The auction listing ID
+    };
+
+    const response = await fetch("https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/init_payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+    console.log(" PayPal Response:", data);
+
+    if (data.successful && data.order && Array.isArray(data.order.links)) {
+      const approvalLink = data.order.links.find(link => link.rel === "payer-action");
+
+      if (approvalLink && approvalLink.href) {
+        console.log(`🔗 Redirecting to PayPal: ${approvalLink.href}`);
+        setSnackbarSeverity("success");
+        setSnackbarMessage("✅ Redirecting to PayPal...");
+        setOpenSnackbar(true);
+
+        setTimeout(() => {
+          window.location.href = approvalLink.href; // ✅ Redirect user to PayPal after a brief delay
+        }, 2000);
+      } else {
+        throw new Error("❌ No approval link found in PayPal response.");
+      }
+    } else {
+      setSnackbarSeverity("error");
+      setSnackbarMessage(`❌ Payment failed: ${data.error || "Unknown error"}`);
+      setOpenSnackbar(true);
+    }
+  } catch (error) {
+    console.error("❌ Error processing payment:", error);
+    setSnackbarSeverity("error");
+    setSnackbarMessage("❌ An error occurred while processing your payment.");
+    setOpenSnackbar(true);
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   useEffect(() => {
     if (listingId) {
@@ -264,14 +200,11 @@ function ReviewPurchase() {
 
   // Early return for invalid listing data
   if (!listing) {
-    return (
-      <div style={{ textAlign: "center", color: "red" }}>
-        Error: Invalid listing data
-      </div>
-    );
+    return <div style={{ textAlign: "center", color: "red" }}>Error: Invalid listing data</div>;
   }
 
   return (
+    
     <AppTheme>
       <CssBaseline enableColorScheme />
       <AppAppBar />
@@ -306,13 +239,9 @@ function ReviewPurchase() {
               marginBottom: "20px",
             }}
           >
-            <Box
+           <Box
               component="img"
-              src={
-                listing?.image_urls?.length > 0
-                  ? listing.image_urls[0]
-                  : "/placeholder.jpg"
-              }
+              src={listing?.image_urls?.length > 0 ? listing.image_urls[0] : "/placeholder.jpg"}
               alt={listing?.title || "Listing Image"}
               sx={{
                 width: "100%",
@@ -322,9 +251,7 @@ function ReviewPurchase() {
                 border: "2px solid grey",
               }}
             />
-            <h2
-              style={{ fontSize: "1.8rem", margin: "0", textAlign: "center" }}
-            >
+            <h2 style={{ fontSize: "1.8rem", margin: "0", textAlign: "center" }}>
               {listing?.title}
             </h2>
           </div>
@@ -365,33 +292,48 @@ function ReviewPurchase() {
               marginTop: "20px",
             }}
           >
-            {/* <button  style={cancelButtonStyle}
+           {/* <button  style={cancelButtonStyle}
             onClick={handleEditBid} // Edit bid action
             >
               Edit Bid
             </button> */}
             <div style={{ marginRight: "10px", marginTop: "10px" }}>
-              <form onSubmit={handleSubmitBid}>
-                <button
-                  style={{
-                    padding: "5px 5px",
-                    border: "none",
-                    borderRadius: "5px",
-                    background: "linear-gradient(to right, #6a11cb, #2575fc)",
-                    color: "#fff",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                  }}
-                  type="submit"
-                  onClick={handleConfirmBid} // ✅ Trigger PayPal redirection
-                >
-                  Confirm Bid
-                </button>
-              </form>
-            </div>
-          </div>
+            <form onSubmit={handleSubmitBid}>
+            <button
+              style={{
+                padding: "5px 5px",
+                border: "none",
+                borderRadius: "5px",
+                background: "linear-gradient(to right, #6a11cb, #2575fc)",
+                color: "#fff",
+                fontSize: "13px",
+                cursor: "pointer",
+              }}
+              type="submit"
+              disabled={isProcessing} // Prevent multiple clicks
+            >
+              Confirm Bid
+            </button>
+          </form>
+         </div>
         </div>
+       </div>
       </div>
+       {/*  Snackbar Notification */}
+       <Snackbar
+        open={openSnackbar}
+        autoHideDuration={4000}  // Duration in ms before Snackbar auto closes
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <MuiAlert
+          onClose={handleCloseSnackbar}
+          severity={snackbarSeverity}
+          sx={{ width: '100%', fontSize: '1.50rem' }}
+        >
+          {snackbarMessage}
+        </MuiAlert>
+      </Snackbar>
     </AppTheme>
   );
 }
