@@ -61,7 +61,19 @@ function ReviewPurchase() {
     }
   };
 
+  const handleEditBid = () => {
+    if (!listing) {
+      console.error("Listing data is undefined or null!");
+      return;
+    }
   
+    console.log("Navigating to /place-bid with listing:", listing);
+    navigate("/place-bid", {
+      state: {
+        listing, // Pass the listing object directly
+      },
+    });
+  };
   
   const handleSubmitBid = async (e) => {
     e.preventDefault(); // ✅ Prevent default form submission
@@ -74,12 +86,12 @@ function ReviewPurchase() {
       return;
     }
   
-    const auctionStrategy = listing.auction_strategy.toLowerCase();
-    console.log(`🔎 Auction strategy: ${auctionStrategy}`);
+   
+    console.log(`🔎 Auction strategy: ${listing.auction_strategy}`);
   
     try {
       let bidApiUrl = "";
-      if (auctionStrategy === "english") {
+      if (listing.auction_strategy === "English") {
         if (parseFloat(newBidAmount) <= currentBid) {
           setSnackbarSeverity("error");
           setSnackbarMessage(`❌ Your bid must be greater than the current highest bid $${currentBid}`);
@@ -88,10 +100,10 @@ function ReviewPurchase() {
         }
         console.log("🔗 Sending English bid...");
         bidApiUrl = "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make";
-      } else if (auctionStrategy === "Dutch") {
+      } else if (listing.auction_strategy === "Dutch") {
         console.log("🔗 Sending Dutch bid...");
         bidApiUrl = "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make_dutch_bid";
-      } else if (auctionStrategy === "Sealed-Bid") {
+      } else if (listing.auction_strategy === "Sealed-Bid") {
         console.log("🔗 Sending Sealed bid...");
         bidApiUrl = "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make_sealed_bid";
       } else {
