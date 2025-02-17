@@ -61,7 +61,7 @@ function ConfirmationPage() {
       if (listing.auction_strategy?.toLowerCase() === "english" ) {
         setTimeout(() => {
           navigate("/bidding-page");
-        }, 2000); // 2-second delay before redirecting
+        }, 10000); // 10-second delay before redirecting
       } else if (listing.auction_strategy?.toLowerCase() === "sealed-bid") {
         console.log(" Sealed-bid auction detected. No real-time bidding needed.");
         // Stay on the confirmation page and only allow returning home
@@ -69,7 +69,7 @@ function ConfirmationPage() {
         console.log(" Dutch auction detected. Redirecting to listing page...");
         setTimeout(() => {
           navigate("/home");
-        }, 2000); // Redirect home after 2 seconds
+        }, 10000); // Redirect home after 10 seconds
       } else {
         console.log(" Unknown auction type. Defaulting to Home.");
         setTimeout(() => {
