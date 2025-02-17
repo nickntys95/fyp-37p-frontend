@@ -13,7 +13,7 @@ function ConfirmationPage() {
   const [isProcessing, setIsProcessing] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState(null);
 
-  // ✅ Retrieve data from sessionStorage
+  //  Retrieve data from sessionStorage
   const fromCheckout = sessionStorage.getItem("fromCheckout") === "true";
   const orderId = searchParams.get("token");
   const payerId = searchParams.get("PayerID");
@@ -21,7 +21,7 @@ function ConfirmationPage() {
   const storedListing = sessionStorage.getItem("listing");
   const listing = storedListing ? JSON.parse(storedListing) : {};
 
-  // ✅ Snackbar State for Notifications
+  //  Snackbar State for Notifications
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("info");
@@ -69,14 +69,14 @@ function ConfirmationPage() {
       }
       setOpenSnackbar(true);
 
-      // ✅ Automatically Redirect Based on Auction Type
+      //  Automatically Redirect Based on Auction Type
       if (data.successful) {
         setTimeout(() => {
-          if (listing.auction_strategy === "english") {
+          if (listing.auction_strategy === "English") {
             navigate("/bidding-page");
-          } else if (listing.auction_strategy === "sealed-bid") {
+          } else if (listing.auction_strategy === "Sealed-Bid") {
             console.log("✅ Sealed-bid auction detected. No real-time bidding needed.");
-          } else if (listing.auction_strategy === "dutch") {
+          } else if (listing.auction_strategy === "Dutch") {
             console.log("✅ Dutch auction detected. Redirecting to listing page...");
             navigate("/home");
           } else {
@@ -106,13 +106,13 @@ function ConfirmationPage() {
           src={listing.image_urls?.[0] || "/placeholder.jpg"}
           alt="Listing Image"
           width="300px"
-          onError={(e) => (e.target.src = "/placeholder.jpg")} // ✅ Prevents broken image
+          onError={(e) => (e.target.src = "/placeholder.jpg")} // Prevents broken image
         />
         <p><strong>Item:</strong> {listing.title || "No Item Title"}</p>
         <p><strong>Payment:</strong> ${bidAmount}</p>
         <p>{isProcessing ? "Processing payment..." : paymentStatus}</p>
 
-        {/* ✅ Show "Return Home" if user came from Checkout, otherwise normal behavior */}
+        {/*  Show "Return Home" if user came from Checkout, otherwise normal behavior */}
         <button
           onClick={() => navigate("/home")}
           className="btn btn-primary mt-3"
@@ -122,7 +122,7 @@ function ConfirmationPage() {
         </button>
       </Box>
 
-      {/* ✅ Snackbar Notification */}
+      {/*  Snackbar Notification */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={4000} // Duration in ms before Snackbar auto closes
