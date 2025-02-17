@@ -30,6 +30,8 @@ export const SessionProvider = ({ children }) => {
     setIsLoggedIn(false);
     setUser(null);
     sessionStorage.removeItem("user");
+    sessionStorage.clear();
+    localStorage.clear();
   };
   
   return (
