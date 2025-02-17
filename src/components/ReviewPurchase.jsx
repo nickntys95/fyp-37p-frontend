@@ -79,6 +79,7 @@ function ReviewPurchase() {
     e.preventDefault(); // ✅ Prevent default form submission
     console.log("🚀 Form submission started!");
   
+    // ✅ Validate bid amount
     if (!newBidAmount || parseFloat(newBidAmount) <= 0) {
       setSnackbarSeverity("error");
       setSnackbarMessage("❌ Please enter a valid bid amount.");
@@ -86,12 +87,13 @@ function ReviewPurchase() {
       return;
     }
   
-   
     console.log(`🔎 Auction strategy: ${listing.auction_strategy}`);
   
     try {
       let bidApiUrl = "";
+      
       if (listing.auction_strategy === "English") {
+        // ✅ Ensure bid is higher than the current bid
         if (parseFloat(newBidAmount) <= currentBid) {
           setSnackbarSeverity("error");
           setSnackbarMessage(`❌ Your bid must be greater than the current highest bid $${currentBid}`);
@@ -113,6 +115,7 @@ function ReviewPurchase() {
         return;
       }
   
+      //  Send API request to place a bid
       const response = await fetch(bidApiUrl, {
         method: "POST",
         headers: {
@@ -128,6 +131,7 @@ function ReviewPurchase() {
       const data = await response.json();
       console.log("✅ API Response:", data);
   
+      //  Handle success case
       if (data.successful) {
         setSnackbarSeverity("success");
         setSnackbarMessage("🎉 Bid placed successfully! Redirecting to payment...");
@@ -136,19 +140,38 @@ function ReviewPurchase() {
         sessionStorage.setItem("listing", JSON.stringify(listing));
         sessionStorage.setItem("bidAmount", newBidAmount);
   
-        // Call PayPal redirection only after a successful bid
-        handleConfirmBid();
+        // Delay PayPal redirection slightly for better user experience
+        setTimeout(() => {
+          handleConfirmBid(); // Call PayPal redirection
+        }, 2000);
+  
       } else {
-        setSnackbarSeverity("error");
-        setSnackbarMessage(data.error || "❌ Failed to place bid.");
-        setOpenSnackbar(true);
+        if (data.error) {
+          console.error("⚠️ API Error:", data.error);
+          setSnackbarSeverity("error");
+  
+          if (typeof data.error === "string" && data.error.includes("SELLER CANNOT BID.")) {
+            setSnackbarMessage("❌ Sellers are not allowed to bid on their own listings.");
+          } else {
+            setSnackbarMessage(data.error || "❌ Failed to place bid.");
+          }
+  
+          setOpenSnackbar(true);
+  
+          // Redirect back after showing error message
+          setTimeout(() => {
+            navigate(-1);
+          }, 3000);
+        }
       }
     } catch (error) {
+      console.error("❌ API Request Failed:", error);
       setSnackbarSeverity("error");
       setSnackbarMessage("❌ Failed to send bid. Please try again.");
       setOpenSnackbar(true);
     }
   };
+  
   
 
 const handleConfirmBid = async () => {
