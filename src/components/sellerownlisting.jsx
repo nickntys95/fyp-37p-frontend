@@ -87,7 +87,7 @@ export default function SellerOwnListing() {
 
   useEffect(() => {
     fetchListings();
-  }, []);
+  }, [token]);
 
   // Categorize listings
   const now = new Date();
