@@ -228,7 +228,7 @@ function Section({ title, list, type, navigate, setListings, listings }) {
   const handleConfirmDelete = async () => {
     setOpen(false);
     const listingId = selectedId;
-    const imageUrls = listings.find(
+    const imageUrls = listings?.find(
       (item) => item.id === listingId
     )?.image_urls; // Get all image URLs of the selected listing
 
