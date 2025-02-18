@@ -5,14 +5,14 @@ import AppAppBar from "./appbar";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 
 function BiddingPage() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    navigate('/home');
+    navigate("/home");
   };
   const location = useLocation();
   const chartRef = useRef(null);
@@ -20,7 +20,8 @@ function BiddingPage() {
   const ws = useRef(null); // WebSocket ref
   const { state } = location;
   const initialBid = parseFloat(state?.bidAmount) || 0;
-  const listing = location.state?.listing || JSON.parse(sessionStorage.getItem("listing"));
+  const listing =
+    location.state?.listing || JSON.parse(sessionStorage.getItem("listing"));
   const [currentBid, setCurrentBid] = useState(0);
   const [newBidAmount, setNewBidAmount] = useState(""); // State for new bid amount
   const [bids, setBids] = useState([]);
@@ -34,24 +35,25 @@ function BiddingPage() {
   const [timeLeft, setTimeLeft] = useState();
   const [isExpired, setIsExpired] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success', 'error'
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error'
   const token = sessionStorage.getItem("token"); // or localStorage.getItem('token');
   const listingId = listing?.id;
-  const [isProcessing, setIsProcessing] = useState(false);
-  
-  
+  const [isProcessing, setIsProcessing] = useState(true);
   // Function to fetch initial bids using the REST API
   const fetchInitialBids = async () => {
     try {
-      const response = await fetch("https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ listing_id: listingId }),
-      });
+      const response = await fetch(
+        "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ listing_id: listingId }),
+        }
+      );
 
       const data = await response.json();
 
@@ -174,9 +176,6 @@ function BiddingPage() {
       );
     };
 
-
-
-
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
       console.log("Received data: ", data); // Pretty log of the incoming data
@@ -198,82 +197,101 @@ function BiddingPage() {
       }
     };
   }, [token, isSubscribed, listingId]);
-// ✅ Handle Bid Submission & Redirect to PayPal
-const handleSubmitBid = async (e) => {
-  e.preventDefault();
-  setNewBidAmount("");
 
-  try {
-    const response = await fetch("https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        listing_id: listingId,
-        amount: newBidAmount,
-      }),
-    });
+  // ✅ Handle Bid Submission & Redirect to PayPal
+  const handleSubmitBid = async (e) => {
+    e.preventDefault();
+    setNewBidAmount("");
 
-    const data = await response.json();
-    if (data.successful) {
-      alert("Bid placed successfully!");
-      handlePaymentRedirect(newBidAmount); // ✅ Redirect to PayPal for payment
-    } else {
-      alert(data.error);
-      setError(data.error || "Failed to place bid.");
-    }
-  } catch (error) {
-    alert("Something went wrong!");
-    setError("Failed to send bid. Please try again.");
-  }
-};
+    try {
+      const response = await fetch("https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/make", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          listing_id: listingId,
+          amount: newBidAmount,
+        }),
+      });
 
-// ✅ Initialize Payment & Redirect to PayPal
-const handlePaymentRedirect = async (bidAmount) => {
-  setIsProcessing(true);
+      const data = await response.json();
+      if (data.successful) {
+        setSnackbarMessage("🎉 Bid placed successfully! Redirecting to PayPal...");
+        setSnackbarSeverity("success");
+        setOpenSnackbar(true);
 
-  try {
-    const requestBody = {
-      amount: bidAmount.toString(),
-      listing_id: listingId,
-    };
+        sessionStorage.setItem("listing", JSON.stringify(listing));
+        sessionStorage.setItem("bidAmount", newBidAmount);
 
-    const response = await fetch("https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/init_payment", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    const data = await response.json();
-
-    if (data.successful && data.order && Array.isArray(data.order.links)) {
-      const approvalLink = data.order.links.find(link => link.rel === "payer-action");
-
-      if (approvalLink && approvalLink.href) {
-        window.location.href = approvalLink.href; // ✅ Redirect to PayPal
+        setTimeout(() => {
+          handlePaymentRedirect(newBidAmount);
+        }, 2000);
       } else {
-        throw new Error("❌ No approval link found in PayPal response.");
+        setSnackbarMessage("❌ Bid failed. Increment below minimum.");
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
       }
-    } else {
-      alert(`❌ Payment failed: ${data.error}`);
+    } catch (error) {
+      setSnackbarMessage("❌ Error placing bid.");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
     }
-  } catch (error) {
-    console.error("❌ Error processing payment:", error);
-    alert("An error occurred while processing your payment.");
-  } finally {
-    setIsProcessing(false);
-  }
-};
+  };
 
+  // ✅ Initialize Payment & Redirect to PayPal
+  const handlePaymentRedirect = async (bidAmount) => {
+    setIsProcessing(true);
+
+    try {
+      const requestBody = {
+        amount: bidAmount.toString(),
+        listing_id: listingId,
+      };
+
+      const response = await fetch("https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/init_payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+
+      if (data.successful && data.order && Array.isArray(data.order.links)) {
+        const approvalLink = data.order.links.find(link => link.rel === "payer-action");
+
+        if (approvalLink?.href) {
+          setSnackbarMessage("✅ Redirecting to PayPal...");
+          setSnackbarSeverity("success");
+          setOpenSnackbar(true);
+
+          setTimeout(() => {
+            window.location.href = approvalLink.href;
+          }, 2000);
+        } else {
+          throw new Error("❌ No approval link found.");
+        }
+      } else {
+        setSnackbarMessage(`❌ Payment failed: ${data.error}`);
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
+      }
+    } catch (error) {
+      setSnackbarMessage("❌ Payment error.");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
-};
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -364,7 +382,11 @@ const handlePaymentRedirect = async (bidAmount) => {
           <div style={{ textAlign: "center" }}>
             <Box
               component="img"
-              src={listing?.image_urls?.length > 0 ? listing.image_urls[0] : "/placeholder.jpg"}
+              src={
+                listing?.image_urls?.length > 0
+                  ? listing.image_urls[0]
+                  : "/placeholder.jpg"
+              }
               alt={listing?.title || "Listing Image"}
               sx={{
                 width: "200px",
@@ -375,8 +397,10 @@ const handlePaymentRedirect = async (bidAmount) => {
                 border: "2px solid grey",
               }}
             />
-            <h4 className="mt-3">{listing.title}</h4> {/* Replace 'product.name' with 'listing.title' */}
-            <p className="text-muted">{listing.description}</p> {/* Replace 'product.description' with 'listing.description' */}
+            <h4 className="mt-3">{listing.title}</h4>{" "}
+            {/* Replace 'product.name' with 'listing.title' */}
+            <p className="text-muted">{listing.description}</p>{" "}
+            {/* Replace 'product.description' with 'listing.description' */}
           </div>
           {/* Chart Section */}
           <div
@@ -485,21 +509,21 @@ const handlePaymentRedirect = async (bidAmount) => {
                   borderRadius: "8px",
                   cursor: "pointer",
                 }}
-                onClick={handleLogout} s
-
+                onClick={handleLogout}
+                s
               >
                 Leave Room
               </button>
               <Snackbar
                 open={openSnackbar}
-                autoHideDuration={4000}  // Duration in ms before Snackbar auto closes
+                autoHideDuration={4000} // Duration in ms before Snackbar auto closes
                 onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                anchorOrigin={{ vertical: "top", horizontal: "center" }}
               >
                 <MuiAlert
                   onClose={handleCloseSnackbar}
                   severity={snackbarSeverity}
-                  sx={{ width: '100%', fontSize: '1.50rem' }}
+                  sx={{ width: "100%", fontSize: "1.50rem" }}
                 >
                   {snackbarMessage}
                 </MuiAlert>
