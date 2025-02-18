@@ -225,11 +225,11 @@ const AdminEdit = () => {
         setSnackbarMessage("Listing updated successfully! Redirecting...");
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
+        // Navigate after a short delay
+        setTimeout(() => {
+          navigate(`/adminhome`);
+        }, 3000);
       }
-      // Navigate after a short delay
-      setTimeout(() => {
-        navigate(`/adminhome`);
-      }, 3000);
     } catch (error) {
       console.error("Error updating listing:", error);
       alert("An error occurred while updating the listing.");
