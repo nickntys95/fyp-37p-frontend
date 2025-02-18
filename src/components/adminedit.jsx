@@ -221,12 +221,11 @@ const AdminEdit = () => {
         const errorData = await response.json();
         alert(`Failed to update: ${errorData.error}`);
         return;
+      } else {
+        setSnackbarMessage("Listing updated successfully! Redirecting...");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
       }
-
-      setSnackbarMessage("Listing updated successfully! Redirecting...");
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
-
       // Navigate after a short delay
       setTimeout(() => {
         navigate(`/adminhome`);
