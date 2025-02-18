@@ -89,7 +89,7 @@ if (orderId && payerId) {
             console.log("✅ Unknown auction type. Defaulting to Home.");
             navigate("/home");
           }
-        }, 10000); // 5-second delay before redirecting
+        }, 8000); // 5-second delay before redirecting
       }
     } catch (error) {
       console.error("❌ Error confirming payment:", error);
