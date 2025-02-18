@@ -20,8 +20,7 @@ function BiddingPage() {
   const ws = useRef(null); // WebSocket ref
   const { state } = location;
   const initialBid = parseFloat(state?.bidAmount) || 0;
-  const listing =
-    location.state?.listing || JSON.parse(sessionStorage.getItem("listing"));
+  const listing = location.state?.listing || JSON.parse(sessionStorage.getItem("listing"));
   const [currentBid, setCurrentBid] = useState(0);
   const [newBidAmount, setNewBidAmount] = useState(""); // State for new bid amount
   const [bids, setBids] = useState([]);
