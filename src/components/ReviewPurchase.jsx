@@ -150,10 +150,16 @@ function ReviewPurchase() {
           console.error("⚠️ API Error:", data.error);
           setSnackbarSeverity("error");
   
-          if (typeof data.error === "string" && data.error.includes("SELLER CANNOT BID.")) {
-            setSnackbarMessage("❌ Sellers are not allowed to bid on their own listings.");
+          if (typeof data.error === "string") {
+            if (data.error.includes("SELLER CANNOT BID.")) {
+              setSnackbarMessage("❌ Sellers are not allowed to bid on their own listings.");
+            } else if (data.error.includes("BID INCREMENT BELOW MINIMUM")) {
+              setSnackbarMessage(" Your bid must be at least the minimum increment above the current bid.");
+            } else {
+              setSnackbarMessage(data.error || "❌ Failed to place bid.");
+            }
           } else {
-            setSnackbarMessage(data.error || "❌ Failed to place bid.");
+            setSnackbarMessage("❌ An unexpected error occurred.");
           }
   
           setOpenSnackbar(true);
