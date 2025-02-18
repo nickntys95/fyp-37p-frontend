@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import AppAppBar from "./appbar";
 import AppTheme from "../shared-theme/AppTheme";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -12,16 +12,21 @@ function ConfirmationPage() {
   const [searchParams] = useSearchParams();
   const [isProcessing, setIsProcessing] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState(null);
-
-  //  Retrieve data from sessionStorage
+  const location = useLocation(); 
+  
+  // ✅ Retrieve data from sessionStorage
   const fromCheckout = sessionStorage.getItem("fromCheckout") === "true";
   const orderId = searchParams.get("token");
   const payerId = searchParams.get("PayerID");
   const bidAmount = sessionStorage.getItem("bidAmount") || "N/A";
-  const storedListing = sessionStorage.getItem("listing");
-  const listing = storedListing ? JSON.parse(storedListing) : {};
 
-  //  Snackbar State for Notifications
+
+  // ✅ Retrieve dynamic listing from location.state, fallback to sessionStorage
+  const locationListing = location.state?.listing || null;
+  const storedListing = sessionStorage.getItem("listing");
+  const listing = locationListing || (storedListing ? JSON.parse(storedListing) : {});
+
+  // ✅ Snackbar State for Notifications
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("info");
@@ -34,7 +39,8 @@ function ConfirmationPage() {
     console.log(" From Checkout:", fromCheckout);
     console.log(" Extracted Auction Strategy:", listing?.auction_strategy || "Not Found");
 
-    if (orderId && payerId) {
+  
+if (orderId && payerId) {
       confirmPayment(orderId, payerId);
     } else {
       setPaymentStatus("❌ Invalid payment details.");
@@ -69,7 +75,7 @@ function ConfirmationPage() {
       }
       setOpenSnackbar(true);
 
-      //  Automatically Redirect Based on Auction Type
+      // ✅ Automatically Redirect Based on Auction Type
       if (data.successful) {
         setTimeout(() => {
           if (listing.auction_strategy === "English") {
@@ -106,23 +112,28 @@ function ConfirmationPage() {
           src={listing.image_urls?.[0] || "/placeholder.jpg"}
           alt="Listing Image"
           width="300px"
-          onError={(e) => (e.target.src = "/placeholder.jpg")} // Prevents broken image
+          onError={(e) => (e.target.src = "/placeholder.jpg")} // ✅ Prevents broken image
         />
         <p><strong>Item:</strong> {listing.title || "No Item Title"}</p>
         <p><strong>Payment:</strong> ${bidAmount}</p>
         <p>{isProcessing ? "Processing payment..." : paymentStatus}</p>
-
-        {/*  Show "Return Home" if user came from Checkout, otherwise normal behavior */}
+        {/*  button based on auction type */}
         <button
-          onClick={() => navigate("/home")}
+          onClick={() => {
+            const auctionStrategy = listing.auction_strategy?.toLowerCase(); 
+            const targetPage = auctionStrategy === "english" ? "/bidding-page" : "/home"; 
+            navigate(targetPage);
+          }}
           className="btn btn-primary mt-3"
-          disabled={isProcessing} // Prevents clicking while loading
+          disabled={isProcessing}  // Prevents clicking while processing
         >
-          Return Home
+          {listing.auction_strategy?.toLowerCase() === "english"
+            ? "Proceed to Bidding Page"
+            : "Return Home"}
         </button>
       </Box>
 
-      {/*  Snackbar Notification */}
+      {/* ✅ Snackbar Notification */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={4000} // Duration in ms before Snackbar auto closes
