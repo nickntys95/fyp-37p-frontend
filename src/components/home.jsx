@@ -153,15 +153,27 @@ function Home() {
       }
 
       console.log(" Data fetched successfully:", data);
-
+  		const currentTime = new Date();
+  		const eightHoursLater = new Date(currentTime.getTime() + (8 * 60 * 60 * 1000)); // Add 8 hours to current time
+  
+  		// Filter data to update only listings that are not expired and end at least 8 hours later
+  		const validListings = data.filter(listing => {
+  		  const endTime = new Date(listing.end_at);
+  		  if (endTime > currentTime && endTime > eightHoursLater) {
+    			console.log("Current Time:", currentTime);
+    			console.log("End Time for listing:", endTime);
+    			return endTime;
+  		  }
+  		});
+      
       // 🔹 Check if listings have changed before updating state
       if (JSON.stringify(data) !== JSON.stringify(cachedListings)) {
         console.log("🔄 Listings updated. Updating state...");
-        setListings(data); // Update listings only if changed
-        setCachedListings(data); // Cache new listings
+        setListings(validListings); // Update listings only if changed
+        setCachedListings(validListings); // Cache new listings
 
         //  Fetch Bids Only If Listings Are Updated
-        fetchBids(data);
+        fetchBids(validListings);
       } else {
         console.log("No new listings. Skipping state update.");
       }
