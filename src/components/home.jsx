@@ -184,42 +184,73 @@ function Home() {
   };
 
   // Fetch Bids Separately After Listings Are Updated
+ // fetch bids
   const fetchBids = async (listings) => {
     try {
-      console.log(" Fetching updated bids...");
+      console.log("📡 Fetching updated bids...");
+  
       const bidRequests = listings.map(async (listing) => {
-        const bidResponse = await fetch(
-          "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ listing_id: listing.id }),
+        let bidResponse;
+        let bidData;
+        let highestBid = 0;
+  
+        if (listing.auction_strategy.toLowerCase() === "dutch") {
+          // ✅ Fetch Dutch bids from /get_dutch_bid
+          bidResponse = await fetch(
+            `https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_dutch_bid/${listing.id}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        } else {
+          // ✅ Fetch normal bids from /get_all
+          bidResponse = await fetch(
+            "https://fyp-37p-api-a16b479cb42b.herokuapp.com/bid/get_all",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ listing_id: listing.id }),
+            }
+          );
+        }
+  
+        if (!bidResponse.ok) {
+          return { id: listing.id, bid: 0 }; // If request fails, set bid to 0
+        }
+  
+        bidData = await bidResponse.json();
+  
+        if (bidData.successful) {
+          if (listing.auction_strategy.toLowerCase() === "dutch") {
+            // ✅ Use the single Dutch bid amount
+            highestBid = bidData.dutch_bid.amount;
+          } else {
+            // ✅ Get the highest bid for English & Sealed-Bid
+            highestBid = Math.max(...bidData.bids.map((bid) => bid.amount), 0);
           }
-        );
-
-        if (!bidResponse.ok) return { id: listing.id, bid: 0 };
-
-        const bidData = await bidResponse.json();
-        const highestBid = bidData.successful
-          ? Math.max(...bidData.bids.map((bid) => bid.amount), 0)
-          : 0;
-
+        }
+  
         return { id: listing.id, bid: highestBid };
       });
-
+  
+      // Wait for all bid requests to complete
       const bids = await Promise.all(bidRequests);
       const bidMap = bids.reduce(
         (acc, { id, bid }) => ({ ...acc, [id]: bid }),
         {}
       );
-
+  
       console.log("📊 Updated Bid Map:", bidMap);
       setCurrentBids((prevBids) => ({ ...prevBids, ...bidMap })); // Merge new bids
     } catch (err) {
-      console.error(" Error fetching bids:", err);
+      console.error("❌ Error fetching bids:", err);
     }
   };
 
