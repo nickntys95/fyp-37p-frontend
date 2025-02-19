@@ -19,7 +19,6 @@ function CheckoutPage() {
 
   const [paymentMethod, setPaymentMethod] = useState("paypal");
   const [promoCode, setPromoCode] = useState("");
-  const [discountApplied, setDiscountApplied] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const token = sessionStorage.getItem("token");
@@ -97,15 +96,20 @@ function CheckoutPage() {
       console.log("📌 Full PayPal API Response:", JSON.stringify(data, null, 2));
   
       if (data.successful && data.order && Array.isArray(data.order.links)) {
-        console.log("📌 Available PayPal Links:", data.order.links);
-  
-        // ✅ Extract the correct PayPal approval link
         const approvalLink = data.order.links.find(link => link.rel === "payer-action");
   
         if (approvalLink && approvalLink.href) {
           console.log("✅ Redirecting to PayPal:", approvalLink.href);
-          
-          // ✅ Store 'fromCheckout' flag in sessionStorage
+  
+          // ✅ Store listing data in sessionStorage
+          sessionStorage.setItem("listing", JSON.stringify({ 
+            id: listing_id, 
+            title, 
+            description, 
+            buy_now, 
+            image_urls 
+          }));
+  
           sessionStorage.setItem("fromCheckout", "true");
   
           window.location.href = approvalLink.href;
@@ -122,6 +126,7 @@ function CheckoutPage() {
       setIsProcessing(false);
     }
   };
+  
   
 
   return (
