@@ -13,24 +13,18 @@ function ConfirmationPage() {
   const [isProcessing, setIsProcessing] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const location = useLocation(); 
-
+  
   // ✅ Retrieve data from sessionStorage
+  const fromCheckout = sessionStorage.getItem("fromCheckout") === "true";
   const orderId = searchParams.get("token");
   const payerId = searchParams.get("PayerID");
+  const bidAmount = sessionStorage.getItem("bidAmount") || "N/A";
 
 
   // ✅ Retrieve dynamic listing from location.state, fallback to sessionStorage
   const locationListing = location.state?.listing || null;
   const storedListing = sessionStorage.getItem("listing");
   const listing = locationListing || (storedListing ? JSON.parse(storedListing) : {});
-
-  // ✅ Retrieve data from sessionStorage
-const fromCheckout = sessionStorage.getItem("fromCheckout") === "true";
-
-  // ✅ Ensure bidAmount is calculated *after* listing is initialized
-  const bidAmount = fromCheckout
-    ? listing?.buy_now  // ✅ If from Checkout, show Buy Now price
-    : sessionStorage.getItem("bidAmount") || "N/A";  // ✅ Otherwise, get the bid amount from sessionStorage
 
   // ✅ Snackbar State for Notifications
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -95,7 +89,7 @@ if (orderId && payerId) {
             console.log("✅ Unknown auction type. Defaulting to Home.");
             navigate("/home");
           }
-        }, 5000); // 8-second delay before redirecting
+        }, 8000); // 5-second delay before redirecting
       }
     } catch (error) {
       console.error("❌ Error confirming payment:", error);
@@ -118,16 +112,13 @@ if (orderId && payerId) {
           src={listing.image_urls?.[0] || "/placeholder.jpg"}
           alt="Listing Image"
           width="300px"
-          onError={(e) => (e.target.src = "/placeholder.jpg")} //  Prevents broken image
+          onError={(e) => (e.target.src = "/placeholder.jpg")} // ✅ Prevents broken image
         />
         <p><strong>Item:</strong> {listing.title || "No Item Title"}</p>
-        <strong>Payment:</strong> ${
-          fromCheckout //  Check if the purchase is from Checkout (Buy Now)
-            ? listing?.buy_now //  Show Buy Now price
-            : bidAmount !== "N/A" // If not from Checkout, check for bid amount
-            ? bidAmount //  Show bid amount if available
-            : "Not Available" //  Default fallback
-        }
+        <p>
+          <strong>Payment:</strong> $
+          {fromCheckout ? listing.buy_now : bidAmount !== "N/A" ? bidAmount : listing.buy_now}
+        </p>
         <p>{isProcessing ? "Processing payment..." : paymentStatus}</p>
         {/*  button based on auction type */}
         <button
