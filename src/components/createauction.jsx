@@ -214,8 +214,6 @@ export default function CreateAuction() {
             method: "POST",
             headers: {
               Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-              "Access-Control-Allow-Credentials": "true"
             },
             body: formDataToUpload,
           }
