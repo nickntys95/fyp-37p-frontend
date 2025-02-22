@@ -14,6 +14,7 @@ import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 
 const token = sessionStorage.getItem("token") || "";
+console.log(token)
 
 const FormGrid = styled(Grid)(() => ({
   display: "flex",
@@ -71,6 +72,9 @@ const ImageSlider = ({ images }) => {
 };
 
 export default function CreateAuction() {
+  const token = sessionStorage.getItem("token") || "";
+console.log(token)
+
   const [formData, setFormData] = useState({
     title: "", // Maps to "title"
     description: "", // Maps to "description"
