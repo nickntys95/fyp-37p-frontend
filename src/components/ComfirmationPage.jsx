@@ -37,7 +37,6 @@ function ConfirmationPage() {
     console.log(" Stored Listing:", listing);
     console.log(" Bid Amount:", bidAmount);
     console.log(" From Checkout:", fromCheckout);
-    console.log(" From Checkout:", listing.buy_now);
     console.log(" Extracted Auction Strategy:", listing?.auction_strategy || "Not Found");
 
   
@@ -116,14 +115,7 @@ if (orderId && payerId) {
           onError={(e) => (e.target.src = "/placeholder.jpg")} // ✅ Prevents broken image
         />
         <p><strong>Item:</strong> {listing.title || "No Item Title"}</p>
-        <p>
-          <strong>Payment:</strong> $
-          {fromCheckout 
-            ? listing.buy_now 
-            : bidAmount !== "N/A" && bidAmount !== null && bidAmount !== undefined 
-              ? bidAmount 
-              : listing.buy_now}
-        </p>
+        <p><strong>Payment:</strong> ${bidAmount}</p>
         <p>{isProcessing ? "Processing payment..." : paymentStatus}</p>
         {/*  button based on auction type */}
         <button
