@@ -212,7 +212,11 @@ export default function CreateAuction() {
           "https://fyp-37p-api-a16b479cb42b.herokuapp.com/listing/upload_image",
           {
             method: "POST",
-            headers: { Authorization: `Bearer ${token}` }, // No 'Content-Type' for FormData
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+              "Access-Control-Allow-Credentials": "true"
+            },
             body: formDataToUpload,
           }
         );
