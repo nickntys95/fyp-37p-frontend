@@ -228,11 +228,6 @@ export default function CreateAuction() {
     }
   };
 
-  useEffect(() => {
-    handleSubmit();
-    uploadImages();
-  }, [token]);
-
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
   };
